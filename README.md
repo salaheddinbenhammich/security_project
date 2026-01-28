@@ -83,7 +83,7 @@ docker ps
 ```
 ### 2️⃣ Execute the setup SQL script
 
-Make sure the file `setup.sql` is available on your machine (for example in `docker/init/setup.sql`).
+Make sure the file `setup.sql` is available on your machine.
 
 Run the following command:
 
