@@ -9,6 +9,44 @@ The backend and frontend run **locally**, while the database runs **inside Docke
 
 ---
 
+## 📸 Application Screenshots
+
+### 🏠 Visitor Homepage
+| Page 1 | Page 2 |
+|------|------|
+| ![](screens/homepage-Visiteur.jpeg) | ![](screens/homepage-Visiteur2.jpeg) |
+
+---
+
+### 🔐 Authentication
+| Login | Register |
+|------|---------|
+| ![](screens/login-page.jpeg) | ![](screens/register-page.jpeg) |
+
+---
+
+### 👤 User Dashboard
+![User Dashboard](screens/dashboard-user-authentiife.jpeg)
+
+---
+
+### 🛠️ Admin Dashboard
+![Admin Dashboard](screens/dashboard-admin.jpeg)
+
+---
+
+### 🎫 Ticket Management (Admin)
+![Ticket Management](screens/Gestion-tickets-ADMIN.jpeg)
+
+---
+
+### 👥 User Management (Admin)
+![User Management](screens/gestionUsers-Admin.jpeg)
+
+---
+
+## 🚀 How to Run the Project
+
 
 ## ⚙️ Prerequisites
 
