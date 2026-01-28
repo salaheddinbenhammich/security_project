@@ -14,34 +14,34 @@ The backend and frontend run **locally**, while the database runs **inside Docke
 ### 🏠 Visitor Homepage
 | Page 1 | Page 2 |
 |------|------|
-| ![](screens/homepage-Visiteur.jpeg) | ![](screens/homepage-Visiteur2.jpeg) |
+| ![](screenshots/homepage-Visiteur.jpeg) | ![](screenshots/homepage-Visiteur2.jpeg) |
 
 ---
 
 ### 🔐 Authentication
 | Login | Register |
 |------|---------|
-| ![](screens/login-page.jpeg) | ![](screens/register-page.jpeg) |
+| ![](screenshots/login-page.jpeg) | ![](screenshots/register-page.jpeg) |
 
 ---
 
 ### 👤 User Dashboard
-![User Dashboard](screens/dashboard-user-authentiife.jpeg)
+![User Dashboard](screenshots/dashboard-user-authentiife.jpeg)
 
 ---
 
 ### 🛠️ Admin Dashboard
-![Admin Dashboard](screens/dashboard-admin.jpeg)
+![Admin Dashboard](screenshots/dashboard-admin.jpeg)
 
 ---
 
 ### 🎫 Ticket Management (Admin)
-![Ticket Management](screens/Gestion-tickets-ADMIN.jpeg)
+![Ticket Management](screenshots/Gestion-tickets-ADMIN.jpeg)
 
 ---
 
 ### 👥 User Management (Admin)
-![User Management](screens/gestionUsers-Admin.jpeg)
+![User Management](screenshots/gestionUsers-Admin.jpeg)
 
 ---
 
