@@ -81,6 +81,37 @@ docker run -d \
 ```bash
 docker ps
 ```
+### 2️⃣ Execute the setup SQL script
+
+Make sure the file `setup.sql` is available on your machine (for example in `docker/init/setup.sql`).
+
+Run the following command:
+
+```bash
+docker exec -i incident-mysql mysql -u root -p incident_db < setup.sql
+```
+
+Enter the MySQL root password when prompted.
+
+This script will:
+- Create demo users (Admin, Technician, User)
+- Assign correct roles
+- Create sample incidents
+- Assign incidents to technician
+
+---
+
+## 🔐 Demo Users & Credentials
+
+> ⚠️ These credentials are **for development/demo only**.
+
+| Role | Email | Password |
+|----|------|----------|
+| **Admin** | myadmin@example.com | admin123 |
+| **Technician** | tech@example.com | tech123 |
+| **User** | salaheddin@gmail.com | Salah-2026 |
+
+Passwords are stored securely using **BCrypt hashing** in the database and cannot be retrieved in plain text.
 
 ---
 
