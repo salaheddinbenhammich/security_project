@@ -155,24 +155,6 @@ http://localhost:8080
 
 ---
 
-## 👤 Create User (Required First Time)
-
-using postman for example
-
-```bash
-POST http://localhost:8080/api/auth/register
-```
-
-BODY :
-
-```
-{
-  "email": "user@example.com",
-  "password": "user123",
-  "fullName": "User",
-  "phone": "1234567890"
-}
-```
 
 ## 🌐 Frontend (Next.js)
 
@@ -199,16 +181,5 @@ Frontend will run on:
 ```
 http://localhost:3000
 ```
-
----
-
-## 🔐 Default Admin Credentials
-
-```
-Email:    admin@admin.com
-Password: admin123
-```
-
-> Password is already **BCrypt-hashed** in the database.
 
 ---
