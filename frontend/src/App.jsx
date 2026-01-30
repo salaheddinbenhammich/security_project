@@ -1,12 +1,16 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Login from './pages/Login';
+import UserDashboard from './pages/UserDashboard';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* On ajoutera les routes ici au fur et à mesure */}
-        <Route path="/" element={<h1>Page Publique (À faire)</h1>} />
-        <Route path="/login" element={<h1>Page Login (À faire)</h1>} />
+        <Route path="/login" element={<Login />} />
+        
+        <Route path="/user" element={<UserDashboard />} />
+        
+        <Route path="*" element={<Login />} />
       </Routes>
     </BrowserRouter>
   );
