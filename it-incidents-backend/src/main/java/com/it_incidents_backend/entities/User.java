@@ -56,10 +56,10 @@ public class User implements UserDetails {
     @Builder.Default
     private Boolean enabled = true;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean accountNonExpired = true;
-
+//    @Column(nullable = false)
+//    @Builder.Default
+//    private Boolean accountNonExpired = true;
+//
     @Column(nullable = false)
     @Builder.Default
     private Boolean accountNonLocked = true;
@@ -106,9 +106,9 @@ public class User implements UserDetails {
     @Builder.Default
     private Set<Ticket> createdTickets = new HashSet<>();
 
-    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<Ticket> assignedTickets = new HashSet<>();
+//    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//    @Builder.Default
+//    private Set<Ticket> assignedTickets = new HashSet<>();
 
     // Spring Security UserDetails implementation
     @Override
@@ -126,10 +126,10 @@ public class User implements UserDetails {
         return username;
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return accountNonExpired;
-    }
+//    @Override
+//    public boolean isAccountNonExpired() {
+//        return accountNonExpired;
+//    }
 
     @Override
     public boolean isAccountNonLocked() {
