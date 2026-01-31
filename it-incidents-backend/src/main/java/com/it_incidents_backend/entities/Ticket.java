@@ -54,13 +54,13 @@ public class Ticket {
     @JoinColumn(name = "created_by_id", nullable = false)
     private User createdBy;
 
-    // Technician/Admin assigned to handle the ticket
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_to_id")
-    private User assignedTo;
+//    // Technician/Admin assigned to handle the ticket
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "assigned_to_id")
+//    private User assignedTo;
 
-    @Column(name = "assigned_at")
-    private LocalDateTime assignedAt;
+//    @Column(name = "assigned_at")
+//    private LocalDateTime assignedAt;
 
     @Column(columnDefinition = "TEXT")
     private String resolution;
