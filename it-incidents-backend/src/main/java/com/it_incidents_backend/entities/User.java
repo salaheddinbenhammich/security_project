@@ -59,7 +59,7 @@ public class User implements UserDetails {
 //    @Column(nullable = false)
 //    @Builder.Default
 //    private Boolean accountNonExpired = true;
-//
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean accountNonLocked = true;
@@ -126,10 +126,10 @@ public class User implements UserDetails {
         return username;
     }
 
-//    @Override
-//    public boolean isAccountNonExpired() {
-//        return accountNonExpired;
-//    }
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
     @Override
     public boolean isAccountNonLocked() {

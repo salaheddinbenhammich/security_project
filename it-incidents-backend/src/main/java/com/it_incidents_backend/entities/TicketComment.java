@@ -41,9 +41,9 @@ public class TicketComment {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-//    @Column(name = "edited", nullable = false)
-//    @Builder.Default
-//    private Boolean edited = false;
+    @Column(name = "edited", nullable = false)
+    @Builder.Default
+    private Boolean edited = false;
 
     @Column(name = "edited_at")
     private LocalDateTime editedAt;

@@ -14,7 +14,7 @@ import java.util.Set;
         @Index(name = "idx_status", columnList = "status"),
         @Index(name = "idx_priority", columnList = "priority"),
         @Index(name = "idx_created_by", columnList = "created_by_id"),
-        @Index(name = "idx_assigned_to", columnList = "assigned_to_id"),
+        //@Index(name = "idx_assigned_to", columnList = "assigned_to_id"),
         @Index(name = "idx_created_at", columnList = "created_at")
 })
 @Getter
@@ -137,7 +137,7 @@ public class Ticket {
     }
 
     public void reopen() {
-        this.status = TicketStatus.IN_PROGRESS;
+        this.status = TicketStatus.PENDING;
         this.closedAt = null;
         this.resolvedAt = null;
         this.resolution = null;
