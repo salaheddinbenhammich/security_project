@@ -1,73 +1,68 @@
 import { useParams, Link } from "react-router-dom";
+import { 
+  Card, CardContent, CardHeader, CardTitle 
+} from "@/components/ui/card"; 
+import { Button } from "@/components/ui/button";    
+import { Badge } from "@/components/ui/badge";      
 
 export default function UserTicketDetail() {
   const { id } = useParams();
   
-  // Mock ticket spécifique (GET /api/tickets/{id})
   const ticket = {
-    id: parseInt(id),
+    id: parseInt(id || "1"),
     title: "Problème réseau étage 3",
     description: "Impossible d'accéder à internet depuis 10h. Affecte toute l'équipe dev.",
     priority: "HAUTE",
     status: "OPEN",
-    createdAt: "2026-01-30 10:15",
     category: "NETWORK",
+    createdAt: "2026-01-30 10:15",
     assignedTo: null
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 p-8">
       <div className="mx-auto max-w-4xl space-y-6">
-        {/* Header avec back */}
+        {/* Header + Back */}
         <div className="flex items-center gap-4">
-          <Link to="/user" className="text-indigo-600 hover:underline font-medium">
-            ← Retour mes tickets
-          </Link>
+          <Button asChild variant="outline">
+            <Link to="/user">← Retour mes tickets</Link>
+          </Button>
           <h1 className="text-3xl font-bold text-gray-900 flex-1">
-            Détail ticket #{ticket.id}
+            Ticket #{ticket.id}
           </h1>
         </div>
 
-        {/* Détail complet */}
-        <div className="grid md:grid-cols-2 gap-8">
-          <Card className="shadow-xl">
-            <CardHeader>
-              <CardTitle>{ticket.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div>
-                <span className="text-sm font-medium text-gray-500">Description</span>
-                <p className="mt-1 text-gray-900">{ticket.description}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="font-medium">Priorité:</span> {ticket.priority}</div>
-                <div><span className="font-medium">Statut:</span> {ticket.status}</div>
-                <div><span className="font-medium">Catégorie:</span> {ticket.category}</div>
-                <div><span className="font-medium">Créé le:</span> {ticket.createdAt}</div>
-                <div><span className="font-medium">Assigné:</span> {ticket.assignedTo || "Non"}</div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Détails */}
+        <Card className="shadow-xl">
+          <CardHeader>
+            <CardTitle>{ticket.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-6">
+            <div>
+              <h3 className="font-medium text-gray-700 mb-2">Description</h3>
+              <p className="text-gray-900 leading-relaxed">{ticket.description}</p>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div><span className="text-gray-500 block">Priorité</span><div className="font-semibold">{ticket.priority}</div></div>
+              <div><span className="text-gray-500 block">Statut</span><Badge variant="destructive">{ticket.status}</Badge></div>
+              <div><span className="text-gray-500 block">Catégorie</span><div>{ticket.category}</div></div>
+              <div><span className="text-gray-500 block">Créé le</span><div>{ticket.createdAt}</div></div>
+            </div>
+          </CardContent>
+        </Card>
 
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Mes actions</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <p className="text-sm text-gray-600 mb-4">
-                  En tant qu'utilisateur, vous pouvez suivre l'évolution de votre ticket.
-                </p>
-                <div className="space-y-2">
-                  <StatusBadge status={ticket.status} className="px-3 py-1" />
-                  {ticket.assignedTo && (
-                    <Badge variant="secondary">Assigné à {ticket.assignedTo}</Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Mes actions</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="text-sm text-gray-600 mb-4">Suivez l'évolution de votre ticket.</p>
+            <Button asChild>
+              <Link to="/user">← Voir tous mes tickets</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
