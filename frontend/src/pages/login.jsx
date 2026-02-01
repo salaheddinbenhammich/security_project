@@ -72,8 +72,9 @@ export default function Login() {
             <Button type="submit" className="w-full mt-2">Se connecter</Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <a href="/" className="text-xs text-gray-500 hover:underline">Retour à l'accueil</a>
+        <CardFooter className="flex justify-between text-xs text-gray-500">
+          <a href="/" className="hover:underline">Back to home</a>
+          <a href="/register" className="hover:underline">Create account</a>
         </CardFooter>
       </Card>
     </div>
