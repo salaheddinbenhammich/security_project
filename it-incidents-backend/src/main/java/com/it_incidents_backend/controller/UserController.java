@@ -25,6 +25,12 @@ public class UserController {
         return userServices.getAllUsers(page, size);
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    UserDetailResponse getUserById(@PathVariable Long id) {
+        return userServices.getUserById(id);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     UserResponse createUser(@RequestBody UserCreateRequest userCreateRequest) {

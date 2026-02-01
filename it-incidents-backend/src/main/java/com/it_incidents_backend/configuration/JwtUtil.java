@@ -24,7 +24,7 @@ public class JwtUtil {
     }
 
     // Generate JWT token with role
-    public String generateToken(String username, String userId, Role role) {
+    public String generateToken(String username, Long userId, Role role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
