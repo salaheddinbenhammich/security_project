@@ -14,7 +14,7 @@ public class ItIncidentsBackendApplication {
     public static void main(String[] args) {
         // Load .env file
         Dotenv dotenv = Dotenv.configure()
-                .directory(".")  // optional: directory where your .env is
+                .directory(".")  // directory where .env is
                 .ignoreIfMissing() // avoid crash if file missing
                 .load();
 
