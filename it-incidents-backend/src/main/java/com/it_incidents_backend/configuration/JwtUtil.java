@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -24,13 +25,13 @@ public class JwtUtil {
     }
 
     // Generate JWT token with role
-    public String generateToken(String username, Long userId, Role role) {
+    public String generateToken(String username, UUID userId, Role role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(username)
-                .claim("userId", userId)
+                .claim("userId", userId.toString())  // ← Convertir UUID en String
                 .claim("role", role.name())
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -44,8 +45,9 @@ public class JwtUtil {
     }
 
     // Extract userId from token
-    public String getUserIdFromToken(String token) {
-        return getClaims(token).get("userId", String.class);
+    public UUID getUserIdFromToken(String token) {
+        String userIdStr = getClaims(token).get("userId", String.class);
+        return userIdStr != null ? UUID.fromString(userIdStr) : null;
     }
 
     // Extract role from token
