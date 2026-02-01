@@ -1,68 +1,43 @@
 package com.it_incidents_backend.mapper;
 
-import com.it_incidents_backend.dto.user.CreateUserRequest;
-import com.it_incidents_backend.dto.auth.SignupRequest;
-import com.it_incidents_backend.dto.user.UserDetailResponse;
-import com.it_incidents_backend.dto.user.UserResponse;
+import com.it_incidents_backend.dto.user.*;
 import com.it_incidents_backend.entities.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
+import org.mapstruct.*;
 
-import java.util.List;
-
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface UserMapper {
+    User toEntity(UserResponse userResponse);
 
-    // Entity → Response DTO
-    UserResponse toResponse(User user);
+    UserResponse toResponseDto(User user);
 
-    // List of Entities → List of Response DTOs
-    List<UserResponse> toResponseList(List<User> users);
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    User partialUpdate(UserResponse userResponse, @MappingTarget User user);
 
-    // Entity → Detailed Response (for admin viewing user details)
-    @Mapping(target = "ticketCount", expression = "java(user.getCreatedTickets() != null ? (long) user.getCreatedTickets().size() : 0L)")
-    UserDetailResponse toDetailResponse(User user);
+    User toEntity(UserCreateRequest userCreateRequest);
 
-    // List conversion for detail response
-    List<UserDetailResponse> toDetailResponseList(List<User> users);
+    UserCreateRequest toCreateDto(User user);
 
-    // SignupRequest → Entity (for creating new user)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "password", ignore = true) // Password will be hashed separately
-    @Mapping(target = "role", ignore = true)     // Role will be set in service
-    @Mapping(target = "enabled", ignore = true)
-    @Mapping(target = "accountNonLocked", ignore = true)
-    @Mapping(target = "credentialsNonExpired", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "deletedAt", ignore = true)
-    @Mapping(target = "deletedBy", ignore = true)
-    @Mapping(target = "failedLoginAttempts", ignore = true)
-    @Mapping(target = "lockedUntil", ignore = true)
-    @Mapping(target = "lastLogin", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "passwordChangedAt", ignore = true)
-    @Mapping(target = "createdTickets", ignore = true)
-    User toEntity(SignupRequest request);
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    User partialUpdate(UserCreateRequest userCreateRequest, @MappingTarget User user);
 
-    // CreateUserRequest → Entity (for admin creating users)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "password", ignore = true) // Password will be hashed separately
-    @Mapping(target = "enabled", ignore = true)
-    @Mapping(target = "accountNonLocked", ignore = true)
-    @Mapping(target = "credentialsNonExpired", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "deletedAt", ignore = true)
-    @Mapping(target = "deletedBy", ignore = true)
-    @Mapping(target = "failedLoginAttempts", ignore = true)
-    @Mapping(target = "lockedUntil", ignore = true)
-    @Mapping(target = "lastLogin", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "passwordChangedAt", ignore = true)
-    @Mapping(target = "createdTickets", ignore = true)
-    User toEntity(CreateUserRequest request);
+    User toEntity(UserDetailResponse userDetailResponse);
 
+    UserDetailResponse toDetailDto(User user);
 
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    User partialUpdate(UserDetailResponse userDetailResponse, @MappingTarget User user);
+
+    User toEntity(UserUpdateRequest userUpdateRequest);
+
+    UserUpdateRequest toUpdateDto(User user);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    User partialUpdate(UserUpdateRequest userUpdateRequest, @MappingTarget User user);
+
+    User toEntity(UserSelfUpdateRequest userSelfUpdateRequest);
+
+    UserSelfUpdateRequest toSelfUpdateDto(User user);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    User partialUpdate(UserSelfUpdateRequest userSelfUpdateRequest, @MappingTarget User user);
 }

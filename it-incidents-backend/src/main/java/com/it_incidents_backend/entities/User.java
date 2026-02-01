@@ -23,7 +23,6 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class User implements UserDetails {
 
     @Id
@@ -53,25 +52,21 @@ public class User implements UserDetails {
     private Role role;
 
     @Column(nullable = false)
-    @Builder.Default
-    private Boolean enabled = true;
+    private Boolean enabled;
 
 //    @Column(nullable = false)
 //    @Builder.Default
 //    private Boolean accountNonExpired = true;
 
     @Column(nullable = false)
-    @Builder.Default
-    private Boolean accountNonLocked = true;
+    private Boolean accountNonLocked;
 
     @Column(nullable = false)
-    @Builder.Default
-    private Boolean credentialsNonExpired = true;
+    private Boolean credentialsNonExpired;
 
     // Soft delete
     @Column(name = "deleted", nullable = false)
-    @Builder.Default
-    private Boolean deleted = false;
+    private Boolean deleted;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -81,8 +76,7 @@ public class User implements UserDetails {
 
     // Failed login attempts tracking (security feature)
     @Column(name = "failed_login_attempts")
-    @Builder.Default
-    private Integer failedLoginAttempts = 0;
+    private Integer failedLoginAttempts;
 
     @Column(name = "locked_until")
     private LocalDateTime lockedUntil;
@@ -103,12 +97,27 @@ public class User implements UserDetails {
 
     // Relationship with tickets
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<Ticket> createdTickets = new HashSet<>();
+    private Set<Ticket> createdTickets;
 
 //    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 //    @Builder.Default
 //    private Set<Ticket> assignedTickets = new HashSet<>();
+
+    @PrePersist
+    private void onCreate() {
+        this.enabled = true;
+        this.accountNonLocked = true;
+        this.createdAt = LocalDateTime.now();
+        this.passwordChangedAt = LocalDateTime.now();
+        this.lastLogin = LocalDateTime.now();
+        this.deleted = false;
+        this.failedLoginAttempts = 0;
+    }
+
+    @PreUpdate
+    private void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     // Spring Security UserDetails implementation
     @Override

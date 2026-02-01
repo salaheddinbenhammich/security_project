@@ -1,5 +1,6 @@
 package com.it_incidents_backend.configuration;
 
+import com.it_incidents_backend.entities.Role;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,14 +23,15 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Generate JWT token
-    public String generateToken(String username, String userId) {
+    // Generate JWT token with role
+    public String generateToken(String username, Long userId, Role role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(username)
                 .claim("userId", userId)
+                .claim("role", role.name())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -44,6 +46,12 @@ public class JwtUtil {
     // Extract userId from token
     public String getUserIdFromToken(String token) {
         return getClaims(token).get("userId", String.class);
+    }
+
+    // Extract role from token
+    public Role getRoleFromToken(String token) {
+        String roleName = getClaims(token).get("role", String.class);
+        return Role.valueOf(roleName);
     }
 
     // Validate token
