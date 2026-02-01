@@ -60,10 +60,21 @@ export default function PublicIncidents() {
           </CardContent>
         </Card>
 
-        {/* Footer info (optionnel) */}
-        <div className="text-center text-sm text-gray-500">
-          Déclaration d'incident ? <span className="font-medium">Se connecter</span>
-        </div>
+          {/* Footer avec lien fonctionnel */}
+    <div className="text-center p-8 pt-12 border-t border-gray-200 bg-white/50 backdrop-blur-sm rounded-xl mt-8">
+      <p className="text-sm text-gray-600 mb-3">
+        Vous avez un problème informatique ?
+      </p>
+      <Link 
+        to="/login" 
+        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+      >
+        Se connecter
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </Link>
+    </div>
       </div>
     </div>
   );
