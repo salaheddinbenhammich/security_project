@@ -53,6 +53,13 @@ public class SecurityConfig {
                         // Public endpoints (no authentication required)
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/health").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
+                        // Role-based authorization examples (customize these based on your needs)
+//                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+//                         .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "USER")
+                        // .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
+
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
