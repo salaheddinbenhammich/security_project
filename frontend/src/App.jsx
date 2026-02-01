@@ -9,11 +9,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* VISITEUR */}
+        {/* Page d'accueil = visiteur */}
         <Route path="/" element={<PublicIncidents />} />
         <Route path="/incidents" element={<PublicIncidents />} />
         
-        {/* AUTH */}
+        {/* USER/ADMIN */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
