@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 
 function StatusBadge({ status }) {
   const variant = status === "OPEN" ? "destructive" : 
-                 status === "IN_PROGRESS" ? "secondary" : "default";
+          status === "IN_PROGRESS" ? "secondary" : "default";
   return <Badge variant={variant}>{status}</Badge>;
 }
 

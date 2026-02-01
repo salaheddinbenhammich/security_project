@@ -1,57 +1,146 @@
-import { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge" 
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { mockUserTickets } from "@/lib/mockUserTickets";
+import { 
+  Card, CardContent, CardDescription, CardHeader, CardTitle 
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { 
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+} from "@/components/ui/select";
 
-// Fausses données pour travailler sans Backend
-const FAKE_TICKETS = [
-  { id: 1, title: "Bug sur le Login", status: "OPEN", date: "2026-01-30" },
-  { id: 2, title: "Erreur 404 page accueil", status: "IN_PROGRESS", date: "2026-01-29" },
-  { id: 3, title: "Demande de compte", status: "CLOSED", date: "2026-01-28" },
-];
+function StatusBadge({ status, className = "" }) {
+  const variant = status === "OPEN" ? "destructive" : 
+          status === "IN_PROGRESS" ? "secondary" : "default";
+  return <Badge variant={variant} className={className}>{status}</Badge>;
+}
 
 export default function UserDashboard() {
-  // Au début, on met les fake tickets dans l'état
-  const [tickets, setTickets] = useState(FAKE_TICKETS);
+  const [tickets, setTickets] = useState(mockUserTickets);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    priority: "MOYENNE"
+  });
 
-  // Pour l'instant, pas de useEffect car on n'appelle pas l'API
-  /*
-  useEffect(() => {
-    api.get('/tickets/my').then(res => setTickets(res.data));
-  }, []);
-  */
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newTicket = {
+      id: Date.now(),
+      title: formData.title,
+      description: formData.description,
+      priority: formData.priority,
+      status: "OPEN",
+      createdAt: new Date().toLocaleString("fr-FR")
+    };
+    
+    setTickets([newTicket, ...tickets]);
+    setFormData({ title: "", description: "", priority: "MOYENNE" });
+  };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Mes Tickets</h1>
-        <Button>+ Nouveau Ticket</Button>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 p-6">
+      <div className="mx-auto max-w-6xl space-y-8">
+        {/* Header */}
+        <div className="text-center border-b pb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+            Mon Espace Utilisateur
+          </h1>
+          <p className="text-xl text-gray-600">Créer & suivre mes tickets</p>
+        </div>
 
-      <div className="grid gap-4">
-        {tickets.map((ticket) => (
-          <Card key={ticket.id}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-medium">
-                {ticket.title}
-              </CardTitle>
-              {/* Petite logique couleur pour le statut */}
-              <span className={`px-2 py-1 rounded text-xs font-bold ${
-                ticket.status === 'OPEN' ? 'bg-green-100 text-green-800' :
-                ticket.status === 'CLOSED' ? 'bg-gray-100 text-gray-800' :
-                'bg-blue-100 text-blue-800'
-              }`}>
-                {ticket.status}
-              </span>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Créé le : {ticket.date}</p>
-              <div className="mt-4 flex gap-2">
-                 <Button variant="outline" size="sm">Voir détails</Button>
+        {/* 1️⃣ CRÉER TICKET (POST /api/tickets) */}
+        <Card className="shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              📝 Nouveau ticket
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="title">Titre *</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  placeholder="Ex: Imprimante bloquée étage 2"
+                  required
+                />
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              
+              <div>
+                <Label htmlFor="description">Description détaillée *</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder="Décrivez précisément le problème..."
+                  rows={4}
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label>Priorité</Label>
+                <Select value={formData.priority} onValueChange={(value) => setFormData({...formData, priority: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FAIBLE">Faible</SelectItem>
+                    <SelectItem value="MOYENNE">Moyenne</SelectItem>
+                    <SelectItem value="HAUTE">Haute</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Button type="submit" className="w-full">
+                📤 Créer mon ticket
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* 2️⃣ MES TICKETS AVEC LIENS DÉTAIL (GET /api/tickets/mytickets) */}
+        <Card className="shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              🎫 Mes tickets ({tickets.length})
+            </CardTitle>
+            <CardDescription>Tickets créés par moi (utilisateur connecté)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {tickets.map((ticket) => (
+              <div key={ticket.id} className="group flex flex-col md:flex-row md:items-center justify-between p-6 border rounded-xl hover:shadow-lg transition-all bg-white">
+                <div className="flex-1 space-y-2">
+                  <div className="font-bold text-xl group-hover:text-indigo-600">
+                    <Link to={`/user/ticket/${ticket.id}`} className="hover:underline">
+                      {ticket.title}
+                    </Link>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed">{ticket.description}</p>
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <span>Priorité: <span className="font-semibold">{ticket.priority}</span></span>
+                    <span>• Créé le {ticket.createdAt}</span>
+                  </div>
+                </div>
+                <StatusBadge status={ticket.status} className="mt-2 md:mt-0" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Navigation */}
+        <div className="flex gap-4 justify-center pt-8 border-t">
+          <Button asChild variant="outline" size="lg">
+            <Link to="/">← Voir incidents publics</Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
