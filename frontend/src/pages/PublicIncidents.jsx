@@ -35,7 +35,7 @@ export default function PublicIncidents() {
               </Badge>
             </CardTitle>
             <CardDescription>
-              Vue publique: GET /api/tickets/public (titre, statut, priorité, date)
+              Vue publique des incidents
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -60,9 +60,15 @@ export default function PublicIncidents() {
           </CardContent>
         </Card>
 
-        {/* Footer info (optionnel) */}
+        {/* Footer info → LIEN CLICABLE */}
         <div className="text-center text-sm text-gray-500">
-          Déclaration d'incident ? <span className="font-medium">Se connecter</span>
+          Déclaration d'incident ?{' '}
+          <Link 
+            to="/login" 
+            className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors"
+          >
+            Se connecter
+          </Link>
         </div>
       </div>
     </div>

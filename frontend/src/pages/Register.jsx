@@ -47,7 +47,7 @@ export default function Register() {
         <CardHeader>
           <CardTitle>Create account</CardTitle>
           <CardDescription>
-            UI only for now – backend will be plugged later.
+            
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -57,7 +57,7 @@ export default function Register() {
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder=""
                 value={form.email}
                 onChange={onChange("email")}
                 required
@@ -68,7 +68,7 @@ export default function Register() {
               <Label htmlFor="fullName">Full name</Label>
               <Input
                 id="fullName"
-                placeholder="Your name"
+                placeholder=""
                 value={form.fullName}
                 onChange={onChange("fullName")}
               />
@@ -78,7 +78,7 @@ export default function Register() {
               <Label htmlFor="phone">Phone</Label>
               <Input
                 id="phone"
-                placeholder="07..."
+                placeholder=""
                 value={form.phone}
                 onChange={onChange("phone")}
               />
@@ -89,7 +89,7 @@ export default function Register() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder=""
                 value={form.password}
                 onChange={onChange("password")}
                 required
@@ -101,7 +101,7 @@ export default function Register() {
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="••••••••"
+                placeholder=""
                 value={form.confirmPassword}
                 onChange={onChange("confirmPassword")}
                 required
