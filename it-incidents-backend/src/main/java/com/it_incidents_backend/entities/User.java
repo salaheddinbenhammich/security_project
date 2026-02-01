@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users", indexes = {
@@ -23,12 +24,11 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false, unique = true, length = 100)
     private String username;
@@ -71,7 +71,7 @@ public class User implements UserDetails {
     // Soft delete
     @Column(name = "deleted", nullable = false)
     @Builder.Default
-    private Boolean deleted = false;
+    private Boolean deleted= false;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -103,12 +103,27 @@ public class User implements UserDetails {
 
     // Relationship with tickets
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<Ticket> createdTickets = new HashSet<>();
+    private Set<Ticket> createdTickets;
 
 //    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 //    @Builder.Default
 //    private Set<Ticket> assignedTickets = new HashSet<>();
+
+    @PrePersist
+    private void onCreate() {
+        this.enabled = true;
+        this.accountNonLocked = true;
+        this.createdAt = LocalDateTime.now();
+        this.passwordChangedAt = LocalDateTime.now();
+        this.lastLogin = LocalDateTime.now();
+        this.deleted = false;
+        this.failedLoginAttempts = 0;
+    }
+
+    @PreUpdate
+    private void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     // Spring Security UserDetails implementation
     @Override

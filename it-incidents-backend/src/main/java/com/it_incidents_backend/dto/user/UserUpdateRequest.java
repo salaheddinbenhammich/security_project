@@ -3,18 +3,22 @@ package com.it_incidents_backend.dto.user;
 import com.it_incidents_backend.entities.Role;
 
 import java.io.Serializable;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 /**
  * DTO for {@link com.it_incidents_backend.entities.User}
  */
-public record UserResponse(
-        UUID id,
+public record UserUpdateRequest(
         String username,
         String email,
         String firstName,
         String lastName,
         String phoneNumber,
-        Role role
+        Role role,
+        Boolean enabled,
+        Boolean accountNonLocked,
+        Boolean credentialsNonExpired,
+        Integer failedLoginAttempts,
+        LocalDateTime lockedUntil
     ) implements Serializable {
 }

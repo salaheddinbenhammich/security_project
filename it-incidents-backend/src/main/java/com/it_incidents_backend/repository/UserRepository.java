@@ -9,15 +9,18 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, UUID> {
 
     // Find user by username (for login)
     Optional<User> findByUsername(String username);
 
     // Find user by email
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsernameOrEmail(String username, String email);
 
     // Check if username already exists (for signup validation)
     boolean existsByUsername(String username);
@@ -33,7 +36,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Find user by ID excluding deleted ones
     @Query("SELECT u FROM User u WHERE u.id = :id AND u.deleted = false")
-    Optional<User> findByIdAndNotDeleted(@Param("id") Long id);
+    Optional<User> findByIdAndNotDeleted(@Param("id") UUID id);
 
     // Count users by role
     long countByRoleAndDeletedFalse(Role role);

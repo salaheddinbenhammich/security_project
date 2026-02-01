@@ -32,11 +32,10 @@ export default function Register() {
     setError("");
 
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Les mots de passe ne correspondent pas.");
       return;
     }
 
-    // MOCK: plus tard tu remplaceras par un appel API /auth/register
     console.log("REGISTER MOCK:", form);
     navigate("/login");
   };
@@ -108,24 +107,67 @@ export default function Register() {
               />
             </div>
 
-            {error && (
-              <p className="text-sm font-medium text-red-500">{error}</p>
-            )}
+                <div className="grid gap-1.5">
+                  <Label htmlFor="password" className="text-slate-200">
+                    Mot de passe
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={form.password}
+                    onChange={onChange("password")}
+                    required
+                    className="bg-slate-900/60 border-slate-700/80 text-slate-50 placeholder:text-slate-500 focus-visible:ring-cyan-500"
+                  />
+                </div>
 
-            <Button type="submit" className="w-full mt-2">
-              Create account
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <span className="text-xs text-gray-500">
-            Already have an account?{" "}
-            <Link to="/login" className="underline">
-              Login
-            </Link>
-          </span>
-        </CardFooter>
-      </Card>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="confirmPassword" className="text-slate-200">
+                    Confirmation du mot de passe
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={form.confirmPassword}
+                    onChange={onChange("confirmPassword")}
+                    required
+                    className="bg-slate-900/60 border-slate-700/80 text-slate-50 placeholder:text-slate-500 focus-visible:ring-cyan-500"
+                  />
+                </div>
+
+                {error && (
+                  <p className="text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/40 rounded-md px-3 py-2">
+                    {error}
+                  </p>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full mt-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold shadow-lg shadow-cyan-500/30"
+                >
+                  Créer mon compte
+                </Button>
+              </form>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-2 items-center justify-center border-t border-slate-800/80 bg-slate-900/70">
+              <span className="text-xs text-slate-400">
+                Déjà un compte ?{" "}
+                <Link
+                  to="/login"
+                  className="font-medium text-cyan-400 hover:text-cyan-300 underline-offset-2 hover:underline"
+                >
+                  Se connecter
+                </Link>
+              </span>
+              <span className="text-[10px] text-slate-500">
+                En continuant, vous acceptez notre politique de sécurité IT.
+              </span>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

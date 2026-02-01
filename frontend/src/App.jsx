@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import PublicIncidents from './pages/PublicIncidents';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import UserDashboard from './pages/UserDashboard';
+import PublicIncidents from "./pages/PublicIncidents";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import UserDashboard from "./pages/UserDashboard";
+import UserTicketDetail from "./pages/UserTicketDetail";  // ← NOUVEAU
 
 function App() {
   return (
@@ -18,8 +19,9 @@ function App() {
         
         {/* USER */}
         <Route path="/user" element={<UserDashboard />} />
+        <Route path="/user/ticket/:id" element={<UserTicketDetail />} />  {/* ← DÉTAIL TICKET */}
         
-        {/* Default = visiteur */}
+        {/* DEFAULT */}
         <Route path="*" element={<PublicIncidents />} />
       </Routes>
     </BrowserRouter>
