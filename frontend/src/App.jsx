@@ -1,22 +1,28 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import PublicIncidents from "./pages/PublicIncidents";
 import Login from "./pages/Login";
-import UserDashboard from "./pages/UserDashboard";
 import Register from "./pages/Register";
+import UserDashboard from "./pages/UserDashboard";
+import UserTicketDetail from "./pages/UserTicketDetail";  // ← NOUVEAU
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* pour l’instant, page d’accueil = login ou plus tard page visiteur */}
-        <Route path="/" element={<Login />} />
-
+        {/* VISITEUR */}
+        <Route path="/" element={<PublicIncidents />} />
+        <Route path="/incidents" element={<PublicIncidents />} />
+        
+        {/* AUTH */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
+        
+        {/* USER */}
         <Route path="/user" element={<UserDashboard />} />
-
-        {/* fallback */}
-        <Route path="*" element={<Login />} />
+        <Route path="/user/ticket/:id" element={<UserTicketDetail />} />  {/* ← DÉTAIL TICKET */}
+        
+        {/* DEFAULT */}
+        <Route path="*" element={<PublicIncidents />} />
       </Routes>
     </BrowserRouter>
   );
