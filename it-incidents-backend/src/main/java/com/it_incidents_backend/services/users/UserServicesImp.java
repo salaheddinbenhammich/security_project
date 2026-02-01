@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class UserServicesImp implements UserServices {
@@ -35,7 +36,7 @@ public class UserServicesImp implements UserServices {
     }
 
     @Override
-    public UserDetailResponse getUserById(Long id) {
+    public UserDetailResponse getUserById(UUID id) {
         User user = this.userRepository.findById(id).orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         return this.userMapper.toDetailDto(user);
     }
@@ -56,7 +57,7 @@ public class UserServicesImp implements UserServices {
     }
 
     @Override
-    public void updatePassword(Long id, PasswordChangeRequest passwordChangeRequest) {
+    public void updatePassword(UUID id, PasswordChangeRequest passwordChangeRequest) {
         User user = this.userRepository.findById(id).orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         if (!passwordEncoder.matches(passwordChangeRequest.currentPassword(), user.getPassword())) {
             throw new AppException("Current password is incorrect", HttpStatus.BAD_REQUEST);
@@ -67,7 +68,7 @@ public class UserServicesImp implements UserServices {
     }
 
     @Override
-    public void updateUserByAdmin(Long id, UserUpdateRequest updateUserRequest) {
+    public void updateUserByAdmin(UUID id, UserUpdateRequest updateUserRequest) {
         User user = this.userRepository.findById(id).orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         if (updateUserRequest.username() != null && !updateUserRequest.username().equals(user.getUsername())) {
             if (this.userRepository.existsByUsername(updateUserRequest.username())) {
@@ -86,7 +87,7 @@ public class UserServicesImp implements UserServices {
     }
 
     @Override
-    public void updateUser(Long id, UserSelfUpdateRequest userSelfUpdateRequest) {
+    public void updateUser(UUID id, UserSelfUpdateRequest userSelfUpdateRequest) {
         User user = this.userRepository.findById(id).orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         if (userSelfUpdateRequest.username() != null && !userSelfUpdateRequest.username().equals(user.getUsername())) {
             if (this.userRepository.existsByUsername(userSelfUpdateRequest.username())) {
@@ -105,7 +106,7 @@ public class UserServicesImp implements UserServices {
     }
 
     @Override
-    public void deleteUser(Long id) {
+    public void deleteUser(UUID id) {
         User user = this.userRepository.findById(id).orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         this.userRepository.delete(user);
     }

@@ -1,26 +1,39 @@
 package com.it_incidents_backend.configuration;
 
 import com.it_incidents_backend.entities.Role;
+import com.it_incidents_backend.security.UserPrincipal;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.UUID;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+
+        // Skip JWT filter for these paths
+        return path.startsWith("/v3/api-docs") ||
+                path.startsWith("/api-docs") ||
+                path.startsWith("/swagger-ui") ||
+                path.equals("/swagger-ui.html") ||
+                path.startsWith("/api/auth") ||
+                path.equals("/api/health");
+    }
 
     @Override
     protected void doFilterInternal(
@@ -32,20 +45,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = extractJwtFromRequest(request);
 
+            logger.info("JWT Token: " + (jwt != null ? "Present" : "Missing"));
+            //logger.info("JWT Token: {}", jwt != null ? "Present" : "Missing");
+
             if (jwt != null && jwtUtil.validateToken(jwt) && !jwtUtil.isTokenExpired(jwt)) {
                 String username = jwtUtil.getUsernameFromToken(jwt);
-                String userId = jwtUtil.getUserIdFromToken(jwt);
+                //String userIdStr = jwtUtil.getUserIdFromToken(jwt);
+                //Long userId = Long.parseLong(userIdStr);
+                UUID userId = jwtUtil.getUserIdFromToken(jwt);
                 Role role = jwtUtil.getRoleFromToken(jwt);
 
-                // Convert role to GrantedAuthority
-                SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role.name());
+                //logger.info("Extracted from JWT - Username: {}, UserId: {}, Role: {}", username, userId, role);
+                logger.info("Extracted from JWT - Username: " + username
+                        + ", UserId: " + userId
+                        + ", Role: " + role);
+                // Valider que userId n'est pas null
+                if (userId == null) {
+                    logger.error("UserId is null in JWT token");
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
-                // Create authentication token with role
+                // Create UserPrincipal with all user info
+                UserPrincipal userPrincipal = new UserPrincipal(userId, username, role);
+
+                // Create authentication token
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                username,
+                                userPrincipal,
                                 null,
-                                Collections.singletonList(authority)
+                                userPrincipal.getAuthorities()
                         );
 
                 authentication.setDetails(
@@ -57,6 +86,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e);
+            logger.error("JWT Authentication error: ", e);
         }
 
         filterChain.doFilter(request, response);

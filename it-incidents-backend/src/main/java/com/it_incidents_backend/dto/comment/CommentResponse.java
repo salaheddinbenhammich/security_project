@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -21,7 +22,7 @@ public class CommentResponse {
     private LocalDateTime editedAt;
 
     // Author info (limited)
-    private Long authorId;
+    private UUID authorId;
     private String authorUsername;
     private String authorFullName; // firstName + lastName
 }

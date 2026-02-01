@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users", indexes = {
@@ -27,8 +28,8 @@ import java.util.Set;
 public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false, unique = true, length = 100)
     private String username;
@@ -54,7 +55,7 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean enabled;
+    private Boolean enabled = true;
 
 //    @Column(nullable = false)
 //    @Builder.Default
@@ -62,16 +63,16 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean accountNonLocked;
+    private Boolean accountNonLocked = true;
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean credentialsNonExpired;
+    private Boolean credentialsNonExpired = true;
 
     // Soft delete
     @Column(name = "deleted", nullable = false)
     @Builder.Default
-    private Boolean deleted;
+    private Boolean deleted= false;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
@@ -82,7 +83,7 @@ public class User implements UserDetails {
     // Failed login attempts tracking (security feature)
     @Column(name = "failed_login_attempts")
     @Builder.Default
-    private Integer failedLoginAttempts;
+    private Integer failedLoginAttempts = 0;
 
     @Column(name = "locked_until")
     private LocalDateTime lockedUntil;
