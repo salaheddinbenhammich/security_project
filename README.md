@@ -2,8 +2,8 @@
 
 This project is a **full-stack web application** composed of:
 - **Backend**: Spring Boot (Java)
-- **Frontend**: Next.js (React)
-- **Database**: MySQL (running in Docker)
+- **Frontend**: React
+- **Database**: Postgresql (running in Docker)
 
 The backend and frontend run **locally**, while the database runs **inside Docker**.
 
