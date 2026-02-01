@@ -23,7 +23,6 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class User implements UserDetails {
 
     @Id
@@ -53,7 +52,6 @@ public class User implements UserDetails {
     private Role role;
 
     @Column(nullable = false)
-    @Builder.Default
     private Boolean enabled;
 
 //    @Column(nullable = false)
@@ -61,16 +59,13 @@ public class User implements UserDetails {
 //    private Boolean accountNonExpired = true;
 
     @Column(nullable = false)
-    @Builder.Default
     private Boolean accountNonLocked;
 
     @Column(nullable = false)
-    @Builder.Default
     private Boolean credentialsNonExpired;
 
     // Soft delete
     @Column(name = "deleted", nullable = false)
-    @Builder.Default
     private Boolean deleted;
 
     @Column(name = "deleted_at")
@@ -81,7 +76,6 @@ public class User implements UserDetails {
 
     // Failed login attempts tracking (security feature)
     @Column(name = "failed_login_attempts")
-    @Builder.Default
     private Integer failedLoginAttempts;
 
     @Column(name = "locked_until")
@@ -103,8 +97,7 @@ public class User implements UserDetails {
 
     // Relationship with tickets
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<Ticket> createdTickets = new HashSet<>();
+    private Set<Ticket> createdTickets;
 
 //    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 //    @Builder.Default
