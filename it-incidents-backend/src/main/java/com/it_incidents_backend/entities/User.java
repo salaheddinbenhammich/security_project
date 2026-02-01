@@ -24,7 +24,6 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class User implements UserDetails {
 
     @Id
@@ -104,8 +103,7 @@ public class User implements UserDetails {
 
     // Relationship with tickets
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<Ticket> createdTickets = new HashSet<>();
+    private Set<Ticket> createdTickets;
 
 //    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 //    @Builder.Default
