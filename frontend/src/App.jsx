@@ -10,13 +10,14 @@ function App() {
         {/* pour l’instant, page d’accueil = login ou plus tard page visiteur */}
         <Route path="/" element={<Login />} />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={<PublicIncidents />} />           {/* Visiteur */}
+        <Route path="/incidents" element={<PublicIncidents />} />  {/* Visiteur */}
 
-        <Route path="/user" element={<UserDashboard />} />
+        <Route path="/login" element={<Login />} />        {/* USER/ADMIN */}
+        <Route path="/register" element={<Register />} />  {/* USER/ADMIN */}
 
-        {/* fallback */}
-        <Route path="*" element={<Login />} />
+        <Route path="/user" element={<UserDashboard />} />  {/* USER */}
+        <Route path="*" element={<PublicIncidents />} />       {/* Default = visiteur */}
       </Routes>
     </BrowserRouter>
   );
