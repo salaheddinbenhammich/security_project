@@ -9,9 +9,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface TicketCommentRepository extends JpaRepository<TicketComment, Long> {
+public interface TicketCommentRepository extends JpaRepository<TicketComment, UUID> {
 
     // Find all comments for a specific ticket (ordered by creation date, newest first)
     List<TicketComment> findByTicketOrderByCreatedAtDesc(Ticket ticket);
