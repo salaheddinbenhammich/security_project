@@ -14,7 +14,7 @@ import java.util.UUID;
 @Builder
 public class CommentResponse {
 
-    private Long id;
+    private UUID id;
     private String content;
     private Boolean isInternal;
     private LocalDateTime createdAt;

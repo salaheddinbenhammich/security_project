@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 public class TicketResponse {
 
-    private Long id;
+    private UUID id;
     private String ticketNumber;
     private String title;
     private TicketStatus status;

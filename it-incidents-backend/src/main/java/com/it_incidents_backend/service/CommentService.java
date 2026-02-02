@@ -37,7 +37,7 @@ public class CommentService {
      * - ADMIN can add public or internal comments to any ticket
      */
     @Transactional
-    public CommentResponse addComment(Long ticketId, CreateCommentRequest request, UUID userId, Role userRole) {
+    public CommentResponse addComment(UUID ticketId, CreateCommentRequest request, UUID userId, Role userRole) {
         // Find ticket
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new AppException("Ticket not found", HttpStatus.NOT_FOUND));
@@ -78,7 +78,7 @@ public class CommentService {
      * - USER sees only public comments on their tickets
      * - ADMIN sees all comments (public + internal)
      */
-    public List<CommentResponse> getTicketComments(Long ticketId, UUID userId, Role userRole) {
+    public List<CommentResponse> getTicketComments(UUID ticketId, UUID userId, Role userRole) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new AppException("Ticket not found", HttpStatus.NOT_FOUND));
 
@@ -106,7 +106,7 @@ public class CommentService {
      * - ADMIN can edit any comment
      */
     @Transactional
-    public CommentResponse updateComment(Long commentId, UpdateCommentRequest request, UUID userId, Role userRole) {
+    public CommentResponse updateComment(UUID commentId, UpdateCommentRequest request, UUID userId, Role userRole) {
         TicketComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new AppException("Comment not found", HttpStatus.NOT_FOUND));
 
@@ -130,7 +130,7 @@ public class CommentService {
      * Delete comment (ADMIN only)
      */
     @Transactional
-    public void deleteComment(Long commentId) {
+    public void deleteComment(UUID commentId) {
         TicketComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new AppException("Comment not found", HttpStatus.NOT_FOUND));
 
