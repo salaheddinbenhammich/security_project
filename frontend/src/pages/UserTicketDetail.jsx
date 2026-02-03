@@ -14,6 +14,14 @@ const formatDateTime = (value) => {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString("fr-FR");
 };
 
+function StatusBadge({ status }) {
+  const variant = status === "PENDING" ? "secondary" :
+    status === "IN_PROGRESS" ? "default" :
+    status === "RESOLVED" ? "outline" :
+    status === "CLOSED" ? "secondary" : "destructive";
+  return <Badge variant={variant}>{status}</Badge>;
+}
+
 export default function UserTicketDetail() {
   const { id } = useParams();
   const [ticket, setTicket] = useState(null);
@@ -108,79 +116,82 @@ export default function UserTicketDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 p-8">
-        <div className="mx-auto max-w-4xl">Chargement...</div>
+      <div className="min-h-screen bg-gradient-to-b from-violet-50 via-violet-100 to-violet-200 p-8">
+        <div className="mx-auto max-w-4xl text-slate-600">Chargement...</div>
       </div>
     );
   }
 
   if (!ticket) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 p-8">
-        <div className="mx-auto max-w-4xl">{error || "Ticket introuvable"}</div>
+      <div className="min-h-screen bg-gradient-to-b from-violet-50 via-violet-100 to-violet-200 p-8">
+        <div className="mx-auto max-w-4xl text-slate-600">{error || "Ticket introuvable"}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 p-8">
+    <div className="min-h-screen bg-gradient-to-b from-violet-50 via-violet-100 to-violet-200 p-8">
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex items-center gap-4">
-          <Button asChild variant="outline">
-            <Link to="/user">? Retour mes tickets</Link>
+          <Button asChild variant="outline" className="bg-white">
+            <Link to="/user">Retour mes tickets</Link>
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900 flex-1">
+          <h1 className="text-3xl font-bold text-slate-900 flex-1">
             Ticket #{ticket.id}
           </h1>
         </div>
 
-        <Card className="shadow-xl">
+        <Card className="shadow-xl border-slate-200">
           <CardHeader>
             <CardTitle>{ticket.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
             <div>
-              <h3 className="font-medium text-gray-700 mb-2">Description</h3>
-              <p className="text-gray-900 leading-relaxed">{ticket.description}</p>
+              <h3 className="font-medium text-slate-700 mb-2">Description</h3>
+              <p className="text-slate-900 leading-relaxed">{ticket.description}</p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div><span className="text-gray-500 block">Priorité</span><div className="font-semibold">{ticket.priority}</div></div>
-              <div><span className="text-gray-500 block">Statut</span><Badge variant="destructive">{ticket.status}</Badge></div>
-              <div><span className="text-gray-500 block">Catégorie</span><div>{ticket.category}</div></div>
-              <div><span className="text-gray-500 block">Créé le</span><div>{formatDateTime(ticket.createdAt)}</div></div>
+              <div><span className="text-slate-500 block">Priorite</span><div className="font-semibold">{ticket.priority}</div></div>
+              <div><span className="text-slate-500 block">Statut</span><StatusBadge status={ticket.status} /></div>
+              <div><span className="text-slate-500 block">Categorie</span><div>{ticket.category}</div></div>
+              <div><span className="text-slate-500 block">Cree le</span><div>{formatDateTime(ticket.createdAt)}</div></div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-slate-200">
           <CardHeader>
             <CardTitle>Mes commentaires</CardTitle>
           </CardHeader>
           <CardContent className="pt-6 space-y-4">
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-red-600">{error}</p>}
 
             <Textarea
               value={commentContent}
               onChange={(e) => setCommentContent(e.target.value)}
               placeholder="Ajouter un commentaire..."
               rows={3}
+              className="bg-white border-slate-200"
             />
-            <Button onClick={handleAddComment}>Ajouter</Button>
+            <Button onClick={handleAddComment} className="bg-indigo-600 hover:bg-indigo-500 text-white">
+              Ajouter
+            </Button>
 
             <div className="space-y-4">
               {(ticket.comments || []).length === 0 && (
-                <p className="text-sm text-gray-500">Aucun commentaire pour ce ticket.</p>
+                <p className="text-sm text-slate-500">Aucun commentaire pour ce ticket.</p>
               )}
 
               {(ticket.comments || []).map((comment) => {
                 const isOwner = currentUser && comment.authorId === currentUser.id;
                 return (
-                  <div key={comment.id} className="border rounded-lg p-4 bg-white">
+                  <div key={comment.id} className="border border-slate-200 rounded-lg p-4 bg-white">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-slate-600">
                         <span className="font-medium">{comment.authorFullName || comment.authorUsername}</span>
-                        <span className="ml-2 text-xs text-gray-400">{formatDateTime(comment.createdAt)}</span>
+                        <span className="ml-2 text-xs text-slate-400">{formatDateTime(comment.createdAt)}</span>
                       </div>
                       {isOwner && (
                         <div className="flex items-center gap-2 text-xs">
@@ -200,6 +211,7 @@ export default function UserTicketDetail() {
                           value={editingContent}
                           onChange={(e) => setEditingContent(e.target.value)}
                           rows={3}
+                          className="bg-white border-slate-200"
                         />
                         <div className="flex items-center gap-2">
                           <Button size="sm" onClick={() => handleUpdateComment(comment.id)}>
@@ -211,7 +223,7 @@ export default function UserTicketDetail() {
                         </div>
                       </div>
                     ) : (
-                      <p className="mt-2 text-gray-800">{comment.content}</p>
+                      <p className="mt-2 text-slate-800">{comment.content}</p>
                     )}
                   </div>
                 );
