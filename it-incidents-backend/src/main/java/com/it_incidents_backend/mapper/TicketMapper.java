@@ -3,6 +3,7 @@ package com.it_incidents_backend.mapper;
 import com.it_incidents_backend.dto.ticket.CreateTicketRequest;
 import com.it_incidents_backend.dto.ticket.TicketDetailResponse;
 import com.it_incidents_backend.dto.ticket.TicketResponse;
+import com.it_incidents_backend.dto.ticket.TicketUserResponse;
 import com.it_incidents_backend.entities.Ticket;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -23,6 +24,10 @@ public interface TicketMapper {
     // List conversion
     List<TicketResponse> toResponseList(List<Ticket> tickets);
     List<TicketDetailResponse> toDetailResponseList(List<Ticket> tickets);
+    List<TicketUserResponse> toUserResponseList(List<Ticket> tickets);
+
+    // Entity -> User list response (includes description)
+    TicketUserResponse toUserResponse(Ticket ticket);
 
     // CreateTicketRequest → Entity
     @Mapping(target = "id", ignore = true)
