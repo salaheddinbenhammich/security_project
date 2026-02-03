@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import api from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,11 +15,13 @@ import {
 
 export default function Register() {
   const [form, setForm] = useState({
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
-    fullName: "",
-    phone: "",
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
   });
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -27,7 +30,7 @@ export default function Register() {
     setForm({ ...form, [field]: e.target.value });
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -36,6 +39,7 @@ export default function Register() {
       return;
     }
 
+<<<<<<< Updated upstream
     console.log("REGISTER MOCK:", form);
     navigate("/login");
   };
@@ -124,6 +128,123 @@ export default function Register() {
                     className="bg-slate-900/60 border-slate-700/80 text-slate-50 placeholder:text-slate-500 focus-visible:ring-cyan-500"
                   />
                 </div>
+=======
+    try {
+      const response = await api.post("/auth/register", {
+        username: form.username,
+        email: form.email,
+        password: form.password,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        phoneNumber: form.phoneNumber,
+      });
+
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify({
+        id: response.data.id,
+        username: response.data.username,
+        email: response.data.email,
+        firstName: response.data.firstName,
+        lastName: response.data.lastName,
+        role: response.data.role,
+      }));
+
+      navigate("/user");
+    } catch (err) {
+      setError("Registration failed.");
+    }
+  };
+
+  return (
+    <div className="flex h-screen items-center justify-center bg-gray-100">
+      <Card className="w-[420px]">
+        <CardHeader>
+          <CardTitle>Create account</CardTitle>
+          <CardDescription>
+            Create your account to submit and track incidents.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onSubmit} className="grid gap-4">
+            <div className="grid gap-1.5">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                placeholder="your.username"
+                value={form.username}
+                onChange={onChange("username")}
+                required
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={onChange("email")}
+                required
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="firstName">First name</Label>
+              <Input
+                id="firstName"
+                placeholder="Your first name"
+                value={form.firstName}
+                onChange={onChange("firstName")}
+                required
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="lastName">Last name</Label>
+              <Input
+                id="lastName"
+                placeholder="Your last name"
+                value={form.lastName}
+                onChange={onChange("lastName")}
+                required
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                placeholder="07..."
+                value={form.phoneNumber}
+                onChange={onChange("phoneNumber")}
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={onChange("password")}
+                required
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="confirmPassword">Confirm password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="••••••••"
+                value={form.confirmPassword}
+                onChange={onChange("confirmPassword")}
+                required
+              />
+            </div>
+>>>>>>> Stashed changes
 
                 <div className="grid gap-1.5">
                   <Label htmlFor="password" className="text-slate-200">

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function Login() {
-  const [username, setUsername] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -16,27 +16,21 @@ export default function Login() {
     e.preventDefault();
     setError('');
 
-    // --- CODE TEMPORAIRE (MOCK) ---
-    // On fait semblant que Ã§a charge
-    console.log("Tentative de connexion avec", username, password);
-    
-    // On simule un token admin ou user selon ce que tu tapes
-    const fakeToken = "ey...fausse-cle-secrete...";
-    localStorage.setItem('token', fakeToken);
-    
-    // On redirige direct vers le dashboard User
-    navigate('/user');
-
-    // --- QUAND LE BACKEND SERA PRÃŠT, DÃ‰COMMENTE Ã‡A : ---
-    /*
     try {
-      const response = await api.post('/auth/login', { username, password });
+      const response = await api.post('/auth/login', { usernameOrEmail, password });
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify({
+        id: response.data.id,
+        username: response.data.username,
+        email: response.data.email,
+        firstName: response.data.firstName,
+        lastName: response.data.lastName,
+        role: response.data.role,
+      }));
       navigate('/user');
     } catch (err) {
       setError("Erreur connexion");
     }
-    */
   };
 
   return (
@@ -44,17 +38,17 @@ export default function Login() {
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle>Connexion</CardTitle>
-          <CardDescription>Entre tes identifiants pour accÃ©der aux tickets.</CardDescription>
+          <CardDescription>Entre tes identifiants pour accéder aux tickets.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="grid w-full items-center gap-4">
             <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="username">Utilisateur</Label>
+              <Label htmlFor="username">Utilisateur ou email</Label>
               <Input 
                 id="username" 
                 placeholder="Ex: admin" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={usernameOrEmail}
+                onChange={(e) => setUsernameOrEmail(e.target.value)}
               />
             </div>
             <div className="flex flex-col space-y-1.5">
@@ -62,7 +56,7 @@ export default function Login() {
               <Input 
                 id="password" 
                 type="password" 
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" 
+                placeholder="••••••" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
