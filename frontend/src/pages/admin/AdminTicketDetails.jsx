@@ -4,7 +4,7 @@ import api from "../../services/api";
 import { jwtDecode } from "jwt-decode";
 import { 
   ArrowLeft, Send, User, Clock, Tag, 
-  AlertCircle, CheckCircle2, PlayCircle, Archive, ShieldAlert
+  CheckCircle2, PlayCircle, ShieldAlert, Undo2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
+// --- 1. IMPORTS AJOUTÉS POUR LE DIALOGUE ---
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+
 export default function AdminTicketDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -25,6 +29,10 @@ export default function AdminTicketDetails() {
   const [newComment, setNewComment] = useState("");
   const [isInternal, setIsInternal] = useState(false); 
   const [currentUser, setCurrentUser] = useState("");
+
+  // --- 2. ÉTATS AJOUTÉS POUR LA RÉSOLUTION ---
+  const [isResolveDialogOpen, setIsResolveDialogOpen] = useState(false);
+  const [resolutionText, setResolutionText] = useState("");
 
   const fetchTicket = async () => {
     try {
@@ -61,12 +69,12 @@ export default function AdminTicketDetails() {
     }
   };
 
+  // Mise à jour simple (pour Assigner ou Relâcher)
   const updateStatus = async (newStatus) => {
     try {
       await api.put(`/tickets/${id}/status`, { status: newStatus });
       
-      // Ajout autod'une note interne pour tracer l'action
-      const actionMap = { IN_PROGRESS: "pris en charge", RESOLVED: "résolu", CANCELLED: "annulé" };
+      const actionMap = { IN_PROGRESS: "pris en charge", PENDING: "relâché (remis à traiter)", CANCELLED: "annulé" };
       await api.post(`/tickets/${id}/comments`, {
          content: `Ticket ${actionMap[newStatus] || newStatus} par ${currentUser}.`,
          isInternal: true
@@ -76,10 +84,32 @@ export default function AdminTicketDetails() {
     } catch (err) { alert("Erreur mise à jour statut"); }
   };
 
+  // --- 3. FONCTION DE RÉSOLUTION ---
+  const confirmResolution = async () => {
+    if (!resolutionText.trim()) return;
+    try {
+      // On envoie le statut ET la resolution
+      await api.put(`/tickets/${id}/status`, { 
+        status: "RESOLVED", 
+        resolution: resolutionText 
+      });
+      
+      // Petit commentaire automatique
+      await api.post(`/tickets/${id}/comments`, {
+         content: `Ticket résolu par ${currentUser}. Solution : ${resolutionText}`,
+         isInternal: true
+      });
+
+      // Reset et fermeture
+      setIsResolveDialogOpen(false);
+      setResolutionText("");
+      fetchTicket();
+    } catch (err) { alert("Erreur lors de la résolution"); }
+  };
+
   if (loading) return <div className="p-10 text-center">Chargement des détails...</div>;
   if (!ticket) return null;
 
-  // Helpers pour l'affichage (Couleurs)
   const getPriorityBadge = (p) => {
     const colors = { CRITICAL: "bg-red-600", HIGH: "bg-orange-500", MEDIUM: "bg-blue-500", LOW: "bg-slate-500" };
     return <Badge className={`${colors[p]} hover:${colors[p]}`}>{p}</Badge>;
@@ -107,18 +137,25 @@ export default function AdminTicketDetails() {
         <div className="flex gap-2">
             {ticket.status === 'PENDING' && (
                 <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => updateStatus("IN_PROGRESS")}>
-                    <PlayCircle className="w-4 h-4 mr-2" /> M'assigner (Démarrer)
+                    <PlayCircle className="w-4 h-4 mr-2" /> M'assigner
                 </Button>
             )}
+            
             {ticket.status === 'IN_PROGRESS' && (
-                <Button className="bg-green-600 hover:bg-green-700" onClick={() => updateStatus("RESOLVED")}>
-                    <CheckCircle2 className="w-4 h-4 mr-2" /> Résoudre
-                </Button>
-            )}
-             {ticket.status !== 'CANCELLED' && ticket.status !== 'CLOSED' && (
-                <Button variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => updateStatus("CANCELLED")}>
-                    <Archive className="w-4 h-4 mr-2" /> Archiver
-                </Button>
+                <>
+                    <Button 
+                        variant="outline" 
+                        className="text-orange-600 border-orange-200 hover:bg-orange-50" 
+                        onClick={() => updateStatus("PENDING")}
+                    >
+                        <Undo2 className="w-4 h-4 mr-2" /> Relâcher
+                    </Button>
+
+                    {/* --- 4. LE BOUTON OUVRE LE DIALOGUE --- */}
+                    <Button className="bg-green-600 hover:bg-green-700" onClick={() => setIsResolveDialogOpen(true)}>
+                        <CheckCircle2 className="w-4 h-4 mr-2" /> Résoudre
+                    </Button>
+                </>
             )}
         </div>
       </div>
@@ -127,8 +164,6 @@ export default function AdminTicketDetails() {
         
         {/* GAUCHE : CONVERSATION (2/3) */}
         <div className="lg:col-span-2 space-y-6">
-            
-            {/* Description du ticket */}
             <Card className="border-l-4 border-l-blue-500 shadow-sm">
                 <CardHeader className="bg-slate-50/50 pb-3">
                     <div className="flex items-center gap-3">
@@ -164,7 +199,6 @@ export default function AdminTicketDetails() {
                                     {comment.authorUsername?.substring(0,2).toUpperCase() || "A"}
                                 </AvatarFallback>
                             </Avatar>
-                            {/* Ligne verticale pour note interne */}
                             {comment.isInternal && <div className="w-0.5 h-full bg-amber-200 mt-2"></div>}
                         </div>
                         <div className={`flex-1 p-3 rounded-lg ${comment.isInternal ? "bg-amber-50 border border-amber-100" : "bg-white border"}`}>
@@ -238,8 +272,26 @@ export default function AdminTicketDetails() {
                 </CardContent>
             </Card>
         </div>
-
       </div>
+
+      {/* --- 5. LE DIALOGUE EN BAS DE PAGE --- */}
+      <Dialog open={isResolveDialogOpen} onOpenChange={setIsResolveDialogOpen}>
+        <DialogContent>
+            <DialogHeader><DialogTitle>Résolution du Ticket</DialogTitle></DialogHeader>
+            <div className="py-4 space-y-2">
+                <Label>Quelle solution a été apportée ?</Label>
+                <Input 
+                    value={resolutionText} 
+                    onChange={(e) => setResolutionText(e.target.value)} 
+                    placeholder="Ex: Serveur redémarré, Clé USB remplacée..." 
+                />
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsResolveDialogOpen(false)}>Annuler</Button>
+                <Button onClick={confirmResolution} className="bg-green-600 hover:bg-green-700">Confirmer Résolution</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

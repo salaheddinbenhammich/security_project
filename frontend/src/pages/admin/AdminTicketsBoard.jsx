@@ -13,7 +13,8 @@ import {
   User,
   Calendar,
   ArrowUpDown,
-  XCircle
+  XCircle,
+  ChevronDown
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -32,11 +33,23 @@ export default function AdminTicketsBoard() {
   const [searchTerm, setSearchTerm] = useState("");     // Recherche texte
   const [filterDate, setFilterDate] = useState("");     // Filtre date (YYYY-MM-DD)
   const [sortDesc, setSortDesc] = useState(true);       // Tri (true = plus récent en premier)
-
+  const [filterPriority, setFilterPriority] = useState("ALL"); // NOUVEAU : État priorité
+  const [isPriorityOpen, setIsPriorityOpen] = useState(false);
   // États actions
   const [resolutionText, setResolutionText] = useState("");
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [isResolveDialogOpen, setIsResolveDialogOpen] = useState(false);
+
+  const priorityStyles = {
+    ALL:      { label: "Toutes Priorités", color: "bg-white border-slate-200 text-slate-700", icon: Filter },
+    CRITICAL: { label: "Critique", color: "bg-red-100 text-red-700 border-red-200", icon: AlertCircle },
+    HIGH:     { label: "Haute",    color: "bg-orange-100 text-orange-700 border-orange-200", icon: AlertCircle },
+    MEDIUM:   { label: "Moyenne",  color: "bg-blue-100 text-blue-700 border-blue-200", icon: Clock },
+    LOW:      { label: "Basse",    color: "bg-slate-100 text-slate-700 border-slate-200", icon: Clock }
+  };
+
+  const currentPriorityStyle = priorityStyles[filterPriority] || priorityStyles.ALL;
+  const CurrentIcon = currentPriorityStyle.icon;
 
   // 1. Chargement
   const fetchTickets = async () => {
@@ -76,10 +89,15 @@ export default function AdminTicketsBoard() {
          const ticketDate = new Date(ticket.createdAt).toISOString().split('T')[0];
          matchesDate = ticketDate === filterDate;
      }
+     let matchesPriority = true;
+     if (filterPriority !== "ALL") {
+         matchesPriority = ticket.priority === filterPriority;
+     }
 
-     return matchesSearch && matchesDate;
+      return matchesSearch && matchesDate && matchesPriority;
   });
 
+  
   // --- LOGIQUE DE TRI ---
   const sortedTickets = [...filteredTickets].sort((a, b) => {
     const dateA = new Date(a.createdAt);
@@ -103,13 +121,13 @@ export default function AdminTicketsBoard() {
     } catch (err) { alert("Erreur lors de l'assignation"); }
   };
 
-  const handleArchive = async (ticketId) => {
-    if(!window.confirm("Archiver ce ticket ?")) return;
-    try {
-      await api.put(`/tickets/${ticketId}/status`, { status: "CANCELLED" });
-      fetchTickets();
-    } catch (err) { alert("Erreur archivage"); }
-  };
+  // const handleArchive = async (ticketId) => {
+  //   if(!window.confirm("Archiver ce ticket ?")) return;
+  //   try {
+  //     await api.put(`/tickets/${ticketId}/status`, { status: "CANCELLED" });
+  //     fetchTickets();
+  //   } catch (err) { alert("Erreur archivage"); }
+  // };
 
   const confirmResolution = async () => {
     if (!selectedTicketId || !resolutionText) return;
@@ -123,10 +141,15 @@ export default function AdminTicketsBoard() {
     } catch (err) { alert("Erreur résolution"); }
   };
 
+  const resetFilters = () => {
+      setSearchTerm("");
+      setFilterDate("");
+      setFilterPriority("ALL");
+  };
   if (loading) return <div className="p-8 flex justify-center text-slate-500">Chargement...</div>;
 
   return (
-    <div className="p-1 bg-slate-50/50 min-h-screen space-y-6">
+    <div className="p-6 bg-slate-50/50 min-h-screen space-y-6">
       
       {/* --- BARRE D'OUTILS DE FILTRES --- */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white p-4 rounded-lg border shadow-sm">
@@ -153,6 +176,55 @@ export default function AdminTicketsBoard() {
                     <XCircle className="h-4 w-4" />
                 </button>
             )}
+          </div>
+          {/* Filtre Priorite */}
+          <div className="relative">
+             <div className="absolute left-2.5 top-2.5 text-slate-400 pointer-events-none">
+                <Filter className="h-4 w-4" />
+             </div>
+             <div className="relative">
+             {/* Bouton déclencheur (ressemble à un input) */}
+             <button 
+                onClick={() => setIsPriorityOpen(!isPriorityOpen)}
+                className={`flex h-10 w-[180px] items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-white focus:outline-none focus:ring-2 focus:ring-slate-950 transition-all ${currentPriorityStyle.color} ${filterPriority === 'ALL' ? 'border-slate-200' : 'border'}`}
+             >
+                <div className="flex items-center gap-2">
+                    <CurrentIcon className="h-4 w-4" />
+                    <span>{currentPriorityStyle.label}</span>
+                </div>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+             </button>
+
+             {/* Liste déroulante (s'affiche si ouvert) */}
+             {isPriorityOpen && (
+                <>
+                    {/* Overlay invisible pour fermer en cliquant ailleurs */}
+                    <div className="fixed inset-0 z-10" onClick={() => setIsPriorityOpen(false)}></div>
+                    
+                    <div className="absolute top-full mt-2 left-0 w-[180px] z-20 rounded-md border border-slate-200 bg-white shadow-lg py-1 animate-in fade-in zoom-in-95 duration-100">
+                        {Object.entries(priorityStyles).map(([key, style]) => {
+                            const Icon = style.icon;
+                            return (
+                                <button
+                                    key={key}
+                                    onClick={() => {
+                                        setFilterPriority(key);
+                                        setIsPriorityOpen(false);
+                                    }}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${filterPriority === key ? 'bg-slate-100 font-medium' : ''}`}
+                                >
+                                    {/* On affiche le petit badge coloré dans la liste aussi */}
+                                    <div className={`p-1 rounded-full border ${key === 'ALL' ? 'bg-slate-100 border-slate-200' : style.color}`}>
+                                        <Icon className="h-3 w-3" />
+                                    </div>
+                                    <span className="text-slate-700">{style.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </>
+             )}
+          </div>
           </div>
 
           {/* 2. Filtre Date */}
@@ -312,9 +384,9 @@ function TicketCard({ ticket, type, onAssign, onArchive, onResolve }) {
             <CardFooter className="px-4 pb-3 pt-2 border-t mt-1 gap-2">
                 {type === 'PENDING' ? (
                     <>
-                        <Button size="sm" variant="outline" className="w-full text-xs h-8 hover:bg-red-50 hover:text-red-600 border-dashed" onClick={onArchive}>
+                        {/* <Button size="sm" variant="outline" className="w-full text-xs h-8 hover:bg-red-50 hover:text-red-600 border-dashed" onClick={onArchive}>
                             <Archive className="w-3 h-3 mr-2" /> Archiver
-                        </Button>
+                        </Button> */}
                         <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-xs h-8" onClick={onAssign}>
                             <PlayCircle className="w-3 h-3 mr-2" /> Assigner
                         </Button>
