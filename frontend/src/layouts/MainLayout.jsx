@@ -6,8 +6,7 @@ import HeaderBar from "../layouts/HeaderBar";
 import { 
   LayoutDashboard, 
   Users, 
-  Archive, 
-  PieChart, 
+  Archive,  
   Ticket, 
   PlusCircle, 
   UserCircle 
@@ -21,7 +20,7 @@ const adminNavItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/users", label: "Utilisateurs", icon: Users },
   { to: "/admin/history", label: "Historique", icon: Archive },
-  { to: "/admin/stats", label: "Statistiques", icon: PieChart },
+  // { to: "/admin/stats", label: "Statistiques", icon: PieChart },
   { to: "/admin/profile", label: "Profil", icon: UserCircle },
 ];
 
