@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/services/api";
 import { jwtDecode } from "jwt-decode";
+import { toast } from "sonner";
 import { 
   ArrowLeft, Send, User, Clock, Tag, 
-  CheckCircle2, ShieldAlert
+  CheckCircle2, Pencil, Trash2, ThumbsUp, ThumbsDown,
+  AlertTriangle
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +15,9 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function UserTicketDetails() {
   const { id } = useParams();
@@ -35,7 +40,7 @@ export default function UserTicketDetails() {
       }
     } catch (err) {
       console.error(err);
-      alert("Impossible de charger le ticket");
+      toast.error("Impossible de charger le ticket");
       navigate("/user/tickets");
     } finally {
       setLoading(false);
@@ -54,7 +59,38 @@ export default function UserTicketDetails() {
       setNewComment("");
       fetchTicket(); 
     } catch (err) {
-      alert("Erreur lors de l'envoi du commentaire");
+      toast.error("Erreur lors de l'ajout du commentaire");
+    }
+  };
+
+  const handleConfirmResolution = async () => {
+    try {
+      await api.post(`/tickets/${id}/confirm-resolution`, {
+        confirmed: true,
+        comment: "✅ L'utilisateur a confirmé la résolution. Ticket fermé."
+      });
+      
+      toast.success("Merci ! Ticket fermé avec succès.");
+      fetchTicket(); 
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de la confirmation");
+    }
+  };
+
+  const handleReopenTicket = async () => {
+    try {
+      // confirm: false => Le backend repasse le ticket en IN_PROGRESS (ou PENDING selon sa logique)
+      await api.post(`/tickets/${id}/confirm-resolution`, {
+        confirmed: false,
+        comment: "L'utilisateur indique que le problème persiste. Ticket réouvert."
+      });
+
+      toast.info("Ticket réouvert. Un technicien va vous recontacter.");
+      fetchTicket(); 
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de la réouverture");
     }
   };
 
@@ -66,8 +102,10 @@ export default function UserTicketDetails() {
     return <Badge className={`${colors[p]} hover:${colors[p]}`}>{p}</Badge>;
   };
 
+  const isEditable = ticket.status === 'PENDING' || ticket.status === 'IN_PROGRESS';
+
   return (
-    <div className="bg-slate-50 min-h-screen space-y-6 p-1">
+    <div className="bg-slate-50 min-h-screen space-y-6 p-6">
       
       {/* HEADER NAVIGATION */}
       <Button variant="ghost" className="pl-0 hover:bg-transparent text-slate-600" onClick={() => navigate(-1)}>
@@ -86,12 +124,50 @@ export default function UserTicketDetails() {
         </div>
       </div>
 
+      {/* --- ZONE DE VALIDATION (Visible seulement si RESOLVED) --- */}
+      {ticket.status === 'RESOLVED' && (
+        <Card className="border-2 border-green-500 bg-green-50/50 shadow-md animate-in fade-in zoom-in-95 duration-300">
+            <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-green-800 flex items-center gap-2">
+                        <CheckCircle2 className="w-6 h-6" /> Le support a marqué ce ticket comme résolu
+                    </h3>
+                    <p className="text-green-700 text-sm">
+                        Merci de confirmer si la solution proposée fonctionne pour vous. Cela fermera le ticket.
+                    </p>
+                    {ticket.resolution && (
+                        <div className="mt-2 p-3 bg-white/60 rounded border border-green-200 text-sm text-green-900">
+                            <span className="font-semibold block mb-1">Solution technique :</span>
+                            <span className="italic">{ticket.resolution}</span>
+                        </div>
+                    )}
+                </div>
+                
+                {/* BOUTONS D'ACTION VALIDATION */}
+                <div className="flex gap-3 shrink-0">
+                    <Button 
+                        onClick={handleReopenTicket}
+                        variant="outline" 
+                        className="border-red-200 text-red-700 hover:bg-red-100 hover:text-red-800 bg-white"
+                    >
+                        <ThumbsDown className="w-4 h-4 mr-2" /> Non, ça ne marche pas
+                    </Button>
+                    <Button 
+                        onClick={handleConfirmResolution}
+                        className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                    >
+                        <ThumbsUp className="w-4 h-4 mr-2" /> Oui, c'est résolu
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* GAUCHE : CONVERSATION (2/3) */}
         <div className="lg:col-span-2 space-y-6">
             
-            {/* Description du ticket */}
             <Card className="border-l-4 border-l-blue-500 shadow-sm">
                 <CardHeader className="bg-slate-50/50 pb-3 border-b">
                     <div className="flex items-center gap-3">
@@ -111,15 +187,13 @@ export default function UserTicketDetails() {
                 </CardContent>
             </Card>
 
-            {/* Fil de commentaires */}
             <div className="space-y-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
-                    Historique & Réponses <Badge variant="secondary">{ticket.comments?.filter(c => !c.isInternal).length || 0}</Badge>
+                    Historique <Badge variant="secondary">{ticket.comments?.filter(c => !c.isInternal).length || 0}</Badge>
                 </h3>
                 
                 {ticket.comments?.map((comment) => {
                     if (comment.isInternal) return null;
-
                     const isMe = comment.authorUsername === currentUser; 
 
                     return (
@@ -144,11 +218,11 @@ export default function UserTicketDetails() {
                 })}
             </div>
 
-            {/* Zone de saisie (seulement si le ticket n'est pas fermé/archivé) */}
+            {/* Zone de saisie (Désactivée si CLOSED ou CANCELLED) */}
             {ticket.status !== 'CLOSED' && ticket.status !== 'CANCELLED' && (
                 <Card className="mt-4 bg-slate-50 border-t-2 border-t-slate-200">
                     <CardContent className="pt-4 space-y-3">
-                        <Label className="text-slate-600">Ajouter une réponse ou un complément d'information</Label>
+                        <Label className="text-slate-600">Ajouter une réponse</Label>
                         <Textarea 
                             placeholder="Écrivez votre message ici..." 
                             value={newComment}
@@ -157,7 +231,7 @@ export default function UserTicketDetails() {
                         />
                         <div className="flex justify-end">
                             <Button onClick={handleAddComment} disabled={!newComment.trim()} className="bg-blue-600 hover:bg-blue-700 text-white">
-                                <Send className="w-4 h-4 mr-2" /> Envoyer le message
+                                <Send className="w-4 h-4 mr-2" /> Envoyer
                             </Button>
                         </div>
                     </CardContent>
@@ -178,24 +252,14 @@ export default function UserTicketDetails() {
                         <span className="text-slate-500 flex gap-2"><Clock size={16}/> Créé le</span>
                         <span className="font-medium">{new Date(ticket.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b">
-                        <span className="text-slate-500 flex gap-2"><User size={16}/> Demandeur</span>
-                        <div className="text-right">
-                             <div className="font-medium">{ticket.createdBy?.firstName} {ticket.createdBy?.lastName}</div>
-                             <div className="text-xs text-blue-600">{ticket.createdBy?.email}</div>
-                        </div>
-                    </div>
                     
-                    {/* Affichage de la solution si résolu */}
-                    {ticket.resolution && (
-                         <div className="bg-green-50 p-4 rounded-md border border-green-200 mt-4">
-                            <p className="text-sm font-bold text-green-800 mb-2 flex items-center gap-2">
-                                <CheckCircle2 size={16}/> Problème Résolu
+                    {/* Infos état final si CLOSED */}
+                    {ticket.status === 'CLOSED' && (
+                         <div className="bg-gray-100 p-4 rounded-md border border-gray-200 mt-4 text-center">
+                            <p className="text-sm font-bold text-gray-700 flex items-center justify-center gap-2">
+                                <CheckCircle2 size={16}/> Ticket Fermé
                             </p>
-                            <div className="text-green-900 text-sm">
-                                <span className="font-semibold">Solution apportée :</span>
-                                <p className="italic mt-1">{ticket.resolution}</p>
-                            </div>
+                            <p className="text-xs text-gray-500 mt-1">Vous avez confirmé la résolution.</p>
                          </div>
                     )}
                 </CardContent>
