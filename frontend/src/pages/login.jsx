@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../services/api'; // Ton fichier api.js
+import { useNavigate, Link } from 'react-router-dom';
+import api from '../services/api'; 
+import { jwtDecode } from "jwt-decode"; 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,27 +17,35 @@ export default function Login() {
     e.preventDefault();
     setError('');
 
-    // --- CODE TEMPORAIRE (MOCK) ---
-    // On fait semblant que ça charge
-    console.log("Tentative de connexion avec", username, password);
-    
-    // On simule un token admin ou user selon ce que tu tapes
-    const fakeToken = "ey...fausse-cle-secrete...";
-    localStorage.setItem('token', fakeToken);
-    
-    // On redirige direct vers le dashboard User
-    navigate('/user');
-
-    // --- QUAND LE BACKEND SERA PRÊT, DÉCOMMENTE ÇA : ---
-    /*
     try {
-      const response = await api.post('/auth/login', { username, password });
-      localStorage.setItem('token', response.data.token);
-      navigate('/user');
+      const response = await api.post('/auth/login', { 
+        usernameOrEmail: username, 
+        password: password 
+      });
+
+      // 2. STOCKAGE DU TOKEN
+      const token = response.data.token;
+      localStorage.setItem('token', token);
+
+      // 3. DÉCODAGE ET REDIRECTION INTELLIGENTE
+      try {
+        const decoded = jwtDecode(token);
+        console.log("Connecté en tant que :", decoded.role);
+
+        if (decoded.role === 'ADMIN') {
+          navigate('/admin');
+        } else {
+          navigate('/user');  
+        }
+      } catch (decodeError) {
+        console.error("Erreur de décodage", decodeError);
+        navigate('/user'); 
+      }
+
     } catch (err) {
-      setError("Erreur connexion");
+      console.error("Erreur login:", err);
+      setError("Identifiants incorrects ou erreur serveur.");
     }
-    */
   };
 
   return (
@@ -44,17 +53,18 @@ export default function Login() {
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle>Connexion</CardTitle>
-          <CardDescription>Entre tes identifiants pour accéder aux tickets.</CardDescription>
+          <CardDescription>Accédez à la plateforme IT Incidents.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="grid w-full items-center gap-4">
             <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="username">Utilisateur</Label>
+              <Label htmlFor="username">Utilisateur ou Email</Label>
               <Input 
                 id="username" 
-                placeholder="Ex: admin" 
+                placeholder="admin ou etudiant" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                required
               />
             </div>
             <div className="flex flex-col space-y-1.5">
@@ -65,6 +75,7 @@ export default function Login() {
                 placeholder="••••••" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
             {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
@@ -73,8 +84,8 @@ export default function Login() {
           </form>
         </CardContent>
         <CardFooter className="flex justify-between text-xs text-gray-500">
-          <a href="/" className="hover:underline">Back to home</a>
-          <a href="/register" className="hover:underline">Create account</a>
+          <Link to="/" className="hover:underline">Accueil</Link>
+          <Link to="/register" className="hover:underline">Créer un compte</Link>
         </CardFooter>
       </Card>
     </div>

@@ -165,9 +165,7 @@ export default function Register() {
                 En continuant, vous acceptez notre politique de sécurité IT.
               </span>
             </CardFooter>
-          </Card>
-        </div>
-      </div>
+      </Card>
     </div>
   );
 }

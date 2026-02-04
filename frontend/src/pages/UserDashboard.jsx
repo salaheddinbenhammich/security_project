@@ -20,17 +20,6 @@ function StatusBadge({ status, className = "" }) {
   return <Badge variant={variant} className={className}>{status}</Badge>;
 }
 
-function StatusBadge({ status }) {
-  return (
-    <Badge className={`${
-      status === 'OPEN' ? 'bg-green text-green-800' :
-      status === 'IN_PROGRESS' ? 'bg-blue text-blue-800' :
-      'bg-gray text-gray-800'
-    }`}>
-      {status}
-    </Badge>
-  );
-}
 
 export default function UserDashboard() {
   const [tickets, setTickets] = useState(mockUserTickets);
