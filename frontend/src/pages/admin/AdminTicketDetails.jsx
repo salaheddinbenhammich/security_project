@@ -118,7 +118,7 @@ export default function AdminTicketDetails() {
   return (
     <div className="bg-slate-50 min-h-screen space-y-6">
       {/* HEADER NAVIGATION */}
-      <Button variant="ghost" className="pl-0 hover:bg-transparent" onClick={() => navigate("/admin")}>
+      <Button variant="ghost" className="pl-0 hover:bg-transparent" onClick={() => navigate(-1)}>
         <ArrowLeft className="w-4 h-4 mr-2" /> Retour au Board
       </Button>
 

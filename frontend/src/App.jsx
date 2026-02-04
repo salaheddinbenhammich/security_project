@@ -11,7 +11,7 @@ import UserTicketDetail from "./pages/UserTicketDetail";
 import AdminTicketsBoard from "./pages/admin/AdminTicketsBoard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTicketDetails from "./pages/admin/AdminTicketDetails";
-// import AdminHistory from "./pages/admin/AdminHistory";
+import AdminHistory from "./pages/admin/AdminHistory";
 
 
 const PrivateRoute = ({ children }) => {
@@ -48,7 +48,7 @@ function App() {
           <Route path="/admin" element={<AdminRoute><AdminTicketsBoard /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="/admin/tickets/:id" element={<AdminRoute><AdminTicketDetails /></AdminRoute>} />
-          {/* <Route path="/admin/history" element={<AdminRoute><AdminHistory /></AdminRoute>} /> */}
+          <Route path="/admin/history" element={<AdminRoute><AdminHistory /></AdminRoute>} />
           <Route path="/admin/stats" element={<AdminRoute><div>Stats (À faire)</div></AdminRoute>} />
           
         </Route>
