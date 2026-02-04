@@ -205,7 +205,7 @@ export default function AdminTicketDetails() {
                             <div className="flex items-center justify-between mb-1">
                                 <span className="text-sm font-semibold">
                                     {comment.authorFullName || comment.authorUsername}
-                                    {comment.isInternal && <span className="ml-2 text-[10px] text-amber-600 border border-amber-200 px-1 rounded bg-amber-50 flex items-center inline-flex gap-1"><ShieldAlert size={10}/> INTERNE</span>}
+                                    {comment.isInternal && <span className="ml-2 text-[10px] text-amber-600 border border-amber-200 px-1 rounded bg-amber-50 flex items-center gap-1"><ShieldAlert size={10}/> INTERNE</span>}
                                 </span>
                                 <span className="text-xs text-slate-400">{new Date(comment.createdAt).toLocaleString()}</span>
                             </div>

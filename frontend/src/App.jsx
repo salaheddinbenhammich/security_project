@@ -12,8 +12,8 @@ import AdminTicketsBoard from "./pages/admin/AdminTicketsBoard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTicketDetails from "./pages/admin/AdminTicketDetails";
 import AdminHistory from "./pages/admin/AdminHistory";
-// import AdminHistory from "./pages/admin/AdminHistory";
 import { getToken } from "@/utils/auth";
+import { Toaster } from "sonner";
 
 // ────────────────────────────────────────────────
 // Route Guards
@@ -58,6 +58,7 @@ const AdminRoute = ({ children }) => {
 
 function App() {
   return (
+    <>
     <BrowserRouter>
       <Routes>
         {/* Public routes – no login needed */}
@@ -87,6 +88,8 @@ function App() {
         <Route path="*" element={<PublicIncidents />} />
       </Routes>
     </BrowserRouter>
+    <Toaster richColors position="top-right" />
+    </>
   );
 }
 
