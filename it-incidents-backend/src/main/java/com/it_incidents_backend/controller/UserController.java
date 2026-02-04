@@ -75,7 +75,7 @@ public class UserController {
             @ApiResponse(responseCode = "403", description = "Access denied")
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.userId")
     UserDetailResponse getUserById(
             @PathVariable UUID id
     ) {

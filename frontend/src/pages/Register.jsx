@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { login } from "@/utils/auth";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -49,15 +50,7 @@ export default function Register() {
         phoneNumber: form.phoneNumber,
       });
 
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify({
-        id: response.data.id,
-        username: response.data.username,
-        email: response.data.email,
-        firstName: response.data.firstName,
-        lastName: response.data.lastName,
-        role: response.data.role,
-      }));
+      login(response.data);
 
       navigate("/user");
     } catch (err) {
@@ -66,16 +59,16 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-violet-50 via-violet-100 to-violet-200 flex items-center justify-center px-4 py-12">
+    <div className="flex items-center justify-center min-h-screen px-4 py-12 bg-gradient-to-b from-violet-50 via-violet-100 to-violet-200">
       <div className="w-full max-w-2xl space-y-6 text-center">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-indigo-600">
+          <h1 className="text-3xl font-bold text-indigo-600 md:text-4xl">
             Mon Espace Utilisateur
           </h1>
           <p className="mt-2 text-sm text-slate-600">Creer & suivre mes tickets</p>
         </div>
 
-        <Card className="w-full max-w-xl mx-auto border-slate-200 bg-white/90 shadow-xl shadow-violet-200/60 rounded-2xl">
+        <Card className="w-full max-w-xl mx-auto shadow-xl border-slate-200 bg-white/90 shadow-violet-200/60 rounded-2xl">
           <CardHeader>
             <CardTitle className="text-xl font-semibold text-slate-900">
               Creer un compte
@@ -170,20 +163,20 @@ export default function Register() {
               </div>
 
               {error && (
-                <p className="text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                <p className="px-3 py-2 text-xs font-medium text-red-600 border border-red-200 rounded-md bg-red-50">
                   {error}
                 </p>
               )}
 
               <Button
                 type="submit"
-                className="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg"
+                className="w-full mt-2 font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500"
               >
                 Creer mon compte
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col gap-2 items-center justify-center border-t border-slate-100 bg-white/70">
+          <CardFooter className="flex flex-col items-center justify-center gap-2 border-t border-slate-100 bg-white/70">
             <span className="text-xs text-slate-500">
               Deja un compte ?{" "}
               <Link

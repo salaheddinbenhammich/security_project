@@ -41,6 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+        SecurityContextHolder.clearContext();
 
         try {
             String jwt = extractJwtFromRequest(request);
@@ -88,6 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             logger.error("Cannot set user authentication: {}", e);
             logger.error("JWT Authentication error: ", e);
         }
+
 
         filterChain.doFilter(request, response);
     }

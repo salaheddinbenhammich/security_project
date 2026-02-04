@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { getUser } from "@/utils/auth";
 
 const formatDate = (value) => {
   if (!value) return "-";
@@ -33,13 +34,7 @@ export default function UserTicketDetail() {
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState("");
 
-  const currentUser = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "null");
-    } catch {
-      return null;
-    }
-  })();
+  const currentUser = getUser();
 
   const loadTicket = async () => {
     const response = await api.get(`/tickets/${id}`);
@@ -113,17 +108,17 @@ export default function UserTicketDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white px-4 py-10">
-        <div className="mx-auto max-w-4xl text-sm text-slate-500">Chargement...</div>
+      <div className="min-h-screen px-4 py-10 bg-white">
+        <div className="max-w-4xl mx-auto text-sm text-slate-500">Chargement...</div>
       </div>
     );
   }
 
   if (error || !ticket) {
     return (
-      <div className="min-h-screen bg-white px-4 py-10">
-        <div className="mx-auto max-w-4xl text-sm text-red-500">{error || "Ticket introuvable."}</div>
-        <div className="mx-auto max-w-4xl mt-4">
+      <div className="min-h-screen px-4 py-10 bg-white">
+        <div className="max-w-4xl mx-auto text-sm text-red-500">{error || "Ticket introuvable."}</div>
+        <div className="max-w-4xl mx-auto mt-4">
           <Button asChild variant="outline">
             <Link to="/user">Retour</Link>
           </Button>
@@ -133,48 +128,48 @@ export default function UserTicketDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-white px-4 py-10">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-200 pb-5">
+    <div className="min-h-screen px-4 py-10 bg-white">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <div className="flex flex-col gap-4 pb-5 border-b md:flex-row md:items-center md:justify-between border-slate-200">
           <div>
-            <Button asChild variant="outline" className="border-slate-300 text-slate-700 bg-white hover:bg-slate-50">
+            <Button asChild variant="outline" className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50">
               <Link to="/user">Retour mes tickets</Link>
             </Button>
             <h1 className="mt-4 text-3xl font-bold text-slate-900">
               Ticket {ticket.ticketNumber || `#${ticket.id}`}
             </h1>
-            <p className="text-sm text-slate-600 mt-1">{ticket.title}</p>
+            <p className="mt-1 text-sm text-slate-600">{ticket.title}</p>
           </div>
           <StatusBadge status={ticket.status} />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-          <Card className="border-slate-200 bg-white shadow-sm">
+          <Card className="bg-white shadow-sm border-slate-200">
             <CardHeader>
               <CardTitle>Details du ticket</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
                 <h3 className="text-sm font-semibold text-slate-700">Description</h3>
-                <p className="mt-2 text-sm text-slate-700 leading-relaxed">
+                <p className="mt-2 text-sm leading-relaxed text-slate-700">
                   {ticket.description}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-slate-500 block">Priorite</span>
+                  <span className="block text-slate-500">Priorite</span>
                   <div className="font-semibold text-slate-800">{ticket.priority}</div>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Categorie</span>
+                  <span className="block text-slate-500">Categorie</span>
                   <div className="font-semibold text-slate-800">{ticket.category}</div>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Cree le</span>
+                  <span className="block text-slate-500">Cree le</span>
                   <div className="font-semibold text-slate-800">{formatDate(ticket.createdAt)}</div>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Mis a jour</span>
+                  <span className="block text-slate-500">Mis a jour</span>
                   <div className="font-semibold text-slate-800">{formatDate(ticket.updatedAt)}</div>
                 </div>
               </div>
@@ -187,7 +182,7 @@ export default function UserTicketDetail() {
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200 bg-white shadow-sm">
+          <Card className="bg-white shadow-sm border-slate-200">
             <CardHeader>
               <CardTitle>Ajouter un commentaire</CardTitle>
             </CardHeader>
@@ -204,7 +199,7 @@ export default function UserTicketDetail() {
                 {commentError && (
                   <p className="text-sm text-red-500">{commentError}</p>
                 )}
-                <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold">
+                <Button type="submit" className="w-full font-semibold text-white bg-cyan-600 hover:bg-cyan-500">
                   Ajouter le commentaire
                 </Button>
               </form>
@@ -212,7 +207,7 @@ export default function UserTicketDetail() {
           </Card>
         </div>
 
-        <Card className="border-slate-200 bg-white shadow-sm">
+        <Card className="bg-white shadow-sm border-slate-200">
           <CardHeader>
             <CardTitle>Commentaires</CardTitle>
           </CardHeader>
@@ -222,7 +217,7 @@ export default function UserTicketDetail() {
             )}
 
             {comments.map((comment) => (
-              <div key={comment.id} className="rounded-xl border border-slate-200 p-4">
+              <div key={comment.id} className="p-4 border rounded-xl border-slate-200">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="text-sm font-semibold text-slate-800">
                     {comment.authorFullName || comment.authorUsername}

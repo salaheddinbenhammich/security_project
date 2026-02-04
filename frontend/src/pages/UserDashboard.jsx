@@ -13,6 +13,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 
+import { getUser, logout } from "@/utils/auth";
+
 function StatusBadge({ status, className = "" }) {
   const variant =
     status === "PENDING" ? "secondary" :
@@ -41,21 +43,14 @@ export default function UserDashboard() {
     priority: "MEDIUM",
     category: "OTHER",
   });
-  const user = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "null");
-    } catch {
-      return null;
-    }
-  })();
+  const user = getUser();
 
   const initials = user?.firstName
     ? `${user.firstName[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase()
     : (user?.username?.slice(0, 2) || "U").toUpperCase();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    logout();
     navigate("/login");
   };
 
@@ -95,41 +90,41 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-white px-4 py-10">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 border-b border-slate-200 pb-6">
+    <div className="min-h-screen px-4 py-10 bg-white">
+      <div className="flex flex-col w-full max-w-6xl gap-8 mx-auto">
+        <div className="flex flex-col gap-4 pb-6 border-b md:flex-row md:items-end md:justify-between border-slate-200">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+            <p className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium border rounded-full border-slate-200 bg-slate-50 text-slate-600">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               Espace utilisateur
             </p>
-            <h1 className="mt-3 text-3xl md:text-4xl font-bold tracking-tight text-slate-900">
+            <h1 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl text-slate-900">
               Mes tickets{" "}
-              <span className="bg-gradient-to-r from-cyan-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="text-transparent bg-gradient-to-r from-cyan-600 to-indigo-600 bg-clip-text">
                 incidents IT
               </span>
             </h1>
-            <p className="mt-2 text-sm text-slate-600 max-w-xl">
+            <p className="max-w-xl mt-2 text-sm text-slate-600">
               Cree de nouveaux tickets, verifie l'etat de traitement et garde une trace de tous tes incidents IT.
             </p>
           </div>
           <div className="flex items-center gap-3 text-sm text-slate-500">
             <span className="hidden md:inline text-slate-400">Vue publique ?</span>
-            <Button asChild variant="outline" size="sm" className="border-slate-300 text-slate-700 bg-white hover:bg-slate-50">
+            <Button asChild variant="outline" size="sm" className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50">
               <Link to="/">Incidents publics</Link>
             </Button>
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setProfileOpen((prev) => !prev)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-xs font-semibold text-slate-700 shadow-sm"
+                className="flex items-center justify-center text-xs font-semibold bg-white border rounded-full shadow-sm h-9 w-9 border-slate-200 text-slate-700"
                 aria-label="Menu profil"
               >
                 {initials}
               </button>
               {profileOpen && (
-                <div className="absolute right-0 z-20 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-lg">
-                  <div className="border-b border-slate-100 px-4 py-3">
+                <div className="absolute right-0 z-20 w-56 mt-2 bg-white border shadow-lg rounded-xl border-slate-200">
+                  <div className="px-4 py-3 border-b border-slate-100">
                     <p className="text-sm font-semibold text-slate-800">
                       {user?.firstName || user?.username || "Utilisateur"}
                     </p>
@@ -138,14 +133,14 @@ export default function UserDashboard() {
                   <div className="p-2">
                     <Link
                       to="/user/profile"
-                      className="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      className="block px-3 py-2 text-sm rounded-lg text-slate-700 hover:bg-slate-50"
                     >
                       Profil
                     </Link>
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                      className="w-full px-3 py-2 mt-1 text-sm text-left text-red-600 rounded-lg hover:bg-red-50"
                     >
                       Se deconnecter
                     </button>
@@ -157,11 +152,11 @@ export default function UserDashboard() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-          <Card className="border-slate-200 bg-white shadow-sm">
+          <Card className="bg-white shadow-sm border-slate-200">
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-slate-900">
                 <span>Nouveau ticket</span>
-                <Badge variant="outline" className="border-cyan-500/40 text-cyan-700 bg-cyan-50 text-xs">
+                <Badge variant="outline" className="text-xs border-cyan-500/40 text-cyan-700 bg-cyan-50">
                   POST /api/tickets
                 </Badge>
               </CardTitle>
@@ -248,7 +243,7 @@ export default function UserDashboard() {
 
                 <Button
                   type="submit"
-                  className="w-full mt-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold"
+                  className="w-full mt-2 font-semibold text-white bg-cyan-600 hover:bg-cyan-500"
                 >
                   Creer mon ticket
                 </Button>
@@ -256,7 +251,7 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200 bg-white shadow-sm">
+          <Card className="bg-white shadow-sm border-slate-200">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between gap-2">
                 <div>
@@ -280,10 +275,10 @@ export default function UserDashboard() {
               {!loading && tickets.map((ticket) => (
                 <div
                   key={ticket.id}
-                  className="group flex flex-col md:flex-row md:items-center justify-between p-4 border border-slate-200 rounded-xl bg-white hover:border-cyan-300 hover:bg-slate-50 transition-all"
+                  className="flex flex-col justify-between p-4 transition-all bg-white border group md:flex-row md:items-center border-slate-200 rounded-xl hover:border-cyan-300 hover:bg-slate-50"
                 >
                   <div className="flex-1 space-y-2">
-                    <div className="font-semibold text-base md:text-lg text-slate-900 group-hover:text-cyan-700">
+                    <div className="text-base font-semibold md:text-lg text-slate-900 group-hover:text-cyan-700">
                       <Link
                         to={`/user/ticket/${ticket.id}`}
                         className="hover:underline"
@@ -291,7 +286,7 @@ export default function UserDashboard() {
                         {ticket.title}
                       </Link>
                     </div>
-                    <p className="text-sm text-slate-600 leading-relaxed">
+                    <p className="text-sm leading-relaxed text-slate-600">
                       {ticket.description}
                     </p>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
