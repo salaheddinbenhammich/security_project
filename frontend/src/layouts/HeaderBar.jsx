@@ -26,6 +26,13 @@ export default function HeaderBar({ title, user, onToggleSidebar }) {
   const initials = userName.substring(0, 2).toUpperCase();
   const roleLabel = user?.role === 'ADMIN' ? 'Administrateur' : 'Utilisateur';
 
+  const handleProfileClick = () => {
+      if (user?.role === "ADMIN") {
+        navigate('/admin/profile');
+      } else {
+        navigate('/user/profile'); 
+      }
+};
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 bg-white border-b shadow-sm md:px-8 border-zinc-200">
       
@@ -66,7 +73,7 @@ export default function HeaderBar({ title, user, onToggleSidebar }) {
             <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/user/profile')}>
+            <DropdownMenuItem className="cursor-pointer" onClick={handleProfileClick}>
               <UserCircle className="w-4 h-4 mr-2 text-zinc-500" />
               Mon Profil
             </DropdownMenuItem>

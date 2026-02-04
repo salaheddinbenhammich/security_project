@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/services/api";
 import {
-  Card, CardContent, CardHeader, CardTitle
+  Card, CardContent
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,18 +17,12 @@ import {
     CheckCircle2, 
     PlayCircle, 
     XCircle,
-    Archive
+    Archive,
+    ChevronDown // Important pour le menu
 } from "lucide-react"; 
 import { Input } from "@/components/ui/input"; 
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 
-// Helper pour le badge statut (Style unifié)
+// Helper pour le badge statut dans la liste (utilise les mêmes styles)
 function StatusBadge({ status, className = "" }) {
     const styles = {
       PENDING: "bg-orange-100 text-orange-700 border-orange-200",
@@ -38,7 +32,6 @@ function StatusBadge({ status, className = "" }) {
       CLOSED: "bg-gray-100 text-gray-800 border-gray-300"
     };
     
-    // Fallback pour le texte
     const labelMap = {
         PENDING: "À Traiter",
         IN_PROGRESS: "En Cours",
@@ -65,6 +58,33 @@ export default function UserTickets() {
   const [priorityFilter, setPriorityFilter] = useState("ALL");
   const [dateFilter, setDateFilter] = useState("");
 
+  // État pour gérer quel menu est ouvert
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+  // --- CONFIGURATION VISUELLE (STYLES) ---
+  const statusStyles = {
+    ALL:         { label: "Tous Statuts", color: "bg-white text-slate-700", icon: Filter },
+    PENDING:     { label: "À Traiter",    color: "bg-orange-100 text-orange-700 border-orange-200", icon: Clock },
+    IN_PROGRESS: { label: "En Cours",     color: "bg-blue-100 text-blue-700 border-blue-200", icon: PlayCircle },
+    RESOLVED:    { label: "Résolu",       color: "bg-green-100 text-green-700 border-green-200", icon: CheckCircle2 },
+    CANCELLED:   { label: "Archivé",      color: "bg-slate-100 text-slate-600 border-slate-200", icon: Archive },
+  };
+
+  const priorityStyles = {
+    ALL:      { label: "Toutes Priorités", color: "bg-white text-slate-700", icon: Filter },
+    CRITICAL: { label: "Critique",         color: "bg-red-100 text-red-700 border-red-200", icon: AlertCircle },
+    HIGH:     { label: "Haute",            color: "bg-orange-100 text-orange-700 border-orange-200", icon: AlertCircle },
+    MEDIUM:   { label: "Moyenne",          color: "bg-blue-100 text-blue-700 border-blue-200", icon: Clock },
+    LOW:      { label: "Basse",            color: "bg-slate-100 text-slate-700 border-slate-200", icon: Clock }
+  };
+
+  // Helpers pour le style actuel
+  const currentStatusStyle = statusStyles[statusFilter] || statusStyles.ALL;
+  const StatusIcon = currentStatusStyle.icon;
+
+  const currentPriorityStyle = priorityStyles[priorityFilter] || priorityStyles.ALL;
+  const PriorityIcon = currentPriorityStyle.icon;
+
   const loadTickets = async () => {
     try {
       setLoading(true);
@@ -83,19 +103,14 @@ export default function UserTickets() {
 
   // --- LOGIQUE DE FILTRAGE ---
   const filteredTickets = tickets.filter(ticket => {
-    // 1. Recherche Texte
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = 
         (ticket.title || "").toLowerCase().includes(searchLower) ||
         (ticket.ticketNumber || "").toLowerCase().includes(searchLower);
 
-    // 2. Filtre Statut
     const matchesStatus = statusFilter === "ALL" || ticket.status === statusFilter;
-
-    // 3. Filtre Priorité
     const matchesPriority = priorityFilter === "ALL" || ticket.priority === priorityFilter;
 
-    // 4. Filtre Date
     let matchesDate = true;
     if (dateFilter) {
          const ticketDate = new Date(ticket.createdAt).toISOString().split('T')[0];
@@ -105,10 +120,8 @@ export default function UserTickets() {
     return matchesSearch && matchesStatus && matchesPriority && matchesDate;
   });
 
-  // Tri par date décroissante (plus récent en haut)
   const sortedTickets = [...filteredTickets].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  // Reset des filtres
   const resetFilters = () => {
       setSearchTerm("");
       setStatusFilter("ALL");
@@ -117,10 +130,10 @@ export default function UserTickets() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-8 bg-slate-50/50">
+    <div className="min-h-screen p-1 bg-slate-50/50">
       <div className="flex flex-col w-full max-w-5xl gap-6 mx-auto">
         
-        {/* EN-TÊTE SIMPLE */}
+        {/* EN-TÊTE */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -131,9 +144,9 @@ export default function UserTickets() {
             </p>
           </div>
           
-          <Button onClick={() => navigate("/user/tickets/new")} className="bg-blue-600 hover:bg-blue-700 text-white">
+          {/* <Button onClick={() => navigate("/user/tickets/new")} className="bg-blue-600 hover:bg-blue-700 text-white">
               <Plus className="w-4 h-4 mr-2" /> Nouveau Ticket
-          </Button>
+          </Button> */}
         </div>
 
         {/* BARRE DE FILTRES */}
@@ -141,7 +154,7 @@ export default function UserTickets() {
             <CardContent className="p-4">
                 <div className="flex flex-wrap items-center gap-3">
                     
-                    {/* Recherche */}
+                    {/* 1. Recherche */}
                     <div className="relative flex-1 min-w-[200px]">
                         <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                         <Input 
@@ -157,41 +170,81 @@ export default function UserTickets() {
                         )}
                     </div>
 
-                    {/* Filtre Statut */}
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-[160px] bg-white">
-                            <div className="flex items-center gap-2 text-slate-600">
-                                <Filter className="h-4 w-4" />
-                                <SelectValue placeholder="Statut" />
+                    {/* 2. FILTRE STATUT (CUSTOM) */}
+                    <div className="relative">
+                        <button 
+                            onClick={() => setOpenDropdown(openDropdown === 'STATUS' ? null : 'STATUS')}
+                            className={`flex h-10 w-[180px] items-center justify-between rounded-md border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-950 ${currentStatusStyle.color} ${statusFilter === 'ALL' ? 'border-slate-200' : 'border'}`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <StatusIcon className="h-4 w-4" />
+                                <span className="truncate">{currentStatusStyle.label}</span>
                             </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ALL">Tous les statuts</SelectItem>
-                            <SelectItem value="PENDING">À Traiter</SelectItem>
-                            <SelectItem value="IN_PROGRESS">En Cours</SelectItem>
-                            <SelectItem value="RESOLVED">Résolu</SelectItem>
-                            <SelectItem value="CANCELLED">Archivé</SelectItem>
-                        </SelectContent>
-                    </Select>
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                        </button>
 
-                    {/* Filtre Priorité */}
-                    <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                        <SelectTrigger className="w-[160px] bg-white">
-                            <div className="flex items-center gap-2 text-slate-600">
-                                <AlertCircle className="h-4 w-4" />
-                                <SelectValue placeholder="Priorité" />
+                        {openDropdown === 'STATUS' && (
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setOpenDropdown(null)}></div>
+                                <div className="absolute top-full mt-2 left-0 w-[180px] z-20 rounded-md border border-slate-200 bg-white shadow-lg py-1 animate-in fade-in zoom-in-95 duration-100">
+                                    {Object.entries(statusStyles).map(([key, style]) => {
+                                        const Icon = style.icon;
+                                        return (
+                                            <button
+                                                key={key}
+                                                onClick={() => { setStatusFilter(key); setOpenDropdown(null); }}
+                                                className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${statusFilter === key ? 'bg-slate-100 font-medium' : ''}`}
+                                            >
+                                                <div className={`p-1 rounded-full border ${key === 'ALL' ? 'bg-slate-100 border-slate-200' : style.color}`}>
+                                                    <Icon className="h-3 w-3" />
+                                                </div>
+                                                <span className="text-slate-700">{style.label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* 3. FILTRE PRIORITÉ (CUSTOM) */}
+                    <div className="relative">
+                        <button 
+                            onClick={() => setOpenDropdown(openDropdown === 'PRIORITY' ? null : 'PRIORITY')}
+                            className={`flex h-10 w-[180px] items-center justify-between rounded-md border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-950 ${currentPriorityStyle.color} ${priorityFilter === 'ALL' ? 'border-slate-200' : 'border'}`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <PriorityIcon className="h-4 w-4" />
+                                <span className="truncate">{currentPriorityStyle.label}</span>
                             </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ALL">Toutes Priorités</SelectItem>
-                            <SelectItem value="CRITICAL">🔴 Critique</SelectItem>
-                            <SelectItem value="HIGH">🟠 Haute</SelectItem>
-                            <SelectItem value="MEDIUM">🔵 Moyenne</SelectItem>
-                            <SelectItem value="LOW">⚪ Basse</SelectItem>
-                        </SelectContent>
-                    </Select>
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                        </button>
 
-                    {/* Filtre Date */}
+                        {openDropdown === 'PRIORITY' && (
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setOpenDropdown(null)}></div>
+                                <div className="absolute top-full mt-2 left-0 w-[180px] z-20 rounded-md border border-slate-200 bg-white shadow-lg py-1 animate-in fade-in zoom-in-95 duration-100">
+                                    {Object.entries(priorityStyles).map(([key, style]) => {
+                                        const Icon = style.icon;
+                                        return (
+                                            <button
+                                                key={key}
+                                                onClick={() => { setPriorityFilter(key); setOpenDropdown(null); }}
+                                                className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${priorityFilter === key ? 'bg-slate-100 font-medium' : ''}`}
+                                            >
+                                                <div className={`p-1 rounded-full border ${key === 'ALL' ? 'bg-slate-100 border-slate-200' : style.color}`}>
+                                                    <Icon className="h-3 w-3" />
+                                                </div>
+                                                <span className="text-slate-700">{style.label}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* 4. Filtre Date */}
                     <div className="relative w-[160px]">
                         <div className="absolute left-3 top-2.5 text-slate-400 pointer-events-none">
                             <Calendar className="h-4 w-4" />
