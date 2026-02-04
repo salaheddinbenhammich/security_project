@@ -230,6 +230,7 @@ public class TicketController {
     })
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<TicketStatsResponse> getTicketStats() {
         TicketStatsResponse stats = ticketService.getTicketStats();
         return ResponseEntity.ok(stats);
@@ -256,6 +257,7 @@ public class TicketController {
     })
     @GetMapping("/filter/status/{status}")
     @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<List<TicketResponse>> getTicketsByStatus(
             @PathVariable TicketStatus status
     ) {
@@ -283,6 +285,7 @@ public class TicketController {
     })
     @GetMapping("/filter/priority/{priority}")
     @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<List<TicketResponse>> getTicketsByPriority(
             @PathVariable Priority priority
     ) {

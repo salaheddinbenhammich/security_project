@@ -1,5 +1,6 @@
 package com.it_incidents_backend.dto.ticket;
 
+import com.it_incidents_backend.dto.user.UserResponse;
 import com.it_incidents_backend.entities.Category;
 import com.it_incidents_backend.entities.Priority;
 import com.it_incidents_backend.entities.TicketStatus;
@@ -25,7 +26,6 @@ public class TicketResponse {
     private Category category;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
     // Limited info - no description, no creator details, no comments
     // Used for public dashboard where visitors can see ticket list
 }

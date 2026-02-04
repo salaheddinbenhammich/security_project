@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 // C'est l'adresse du serveur de tes collègues.
-// Si ça change, tu n'auras qu'à modifier cette seule ligne !
 const API_URL = 'http://localhost:8080/api'; 
 
 const api = axios.create({
