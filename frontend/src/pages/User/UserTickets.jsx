@@ -21,8 +21,11 @@ import {
     ChevronDown // Important pour le menu
 } from "lucide-react"; 
 import { Input } from "@/components/ui/input"; 
+import FilterDropdown from "@/components/common/FilterDropdown";
+import { STATUS_STYLES, PRIORITY_STYLES } from "@/components/common/filterOptions";
 
-// Helper pour le badge statut dans la liste (utilise les mêmes styles)
+
+// Helper pour le badge statut dans la liste (utilise les mm styles)
 function StatusBadge({ status, className = "" }) {
     const styles = {
       PENDING: "bg-orange-100 text-orange-700 border-orange-200",
@@ -60,30 +63,6 @@ export default function UserTickets() {
 
   // État pour gérer quel menu est ouvert
   const [openDropdown, setOpenDropdown] = useState(null);
-
-  // --- CONFIGURATION VISUELLE (STYLES) ---
-  const statusStyles = {
-    ALL:         { label: "Tous Statuts", color: "bg-white text-slate-700", icon: Filter },
-    PENDING:     { label: "À Traiter",    color: "bg-orange-100 text-orange-700 border-orange-200", icon: Clock },
-    IN_PROGRESS: { label: "En Cours",     color: "bg-blue-100 text-blue-700 border-blue-200", icon: PlayCircle },
-    RESOLVED:    { label: "Résolu",       color: "bg-green-100 text-green-700 border-green-200", icon: CheckCircle2 },
-    CANCELLED:   { label: "Archivé",      color: "bg-slate-100 text-slate-600 border-slate-200", icon: Archive },
-  };
-
-  const priorityStyles = {
-    ALL:      { label: "Toutes Priorités", color: "bg-white text-slate-700", icon: Filter },
-    CRITICAL: { label: "Critique",         color: "bg-red-100 text-red-700 border-red-200", icon: AlertCircle },
-    HIGH:     { label: "Haute",            color: "bg-orange-100 text-orange-700 border-orange-200", icon: AlertCircle },
-    MEDIUM:   { label: "Moyenne",          color: "bg-blue-100 text-blue-700 border-blue-200", icon: Clock },
-    LOW:      { label: "Basse",            color: "bg-slate-100 text-slate-700 border-slate-200", icon: Clock }
-  };
-
-  // Helpers pour le style actuel
-  const currentStatusStyle = statusStyles[statusFilter] || statusStyles.ALL;
-  const StatusIcon = currentStatusStyle.icon;
-
-  const currentPriorityStyle = priorityStyles[priorityFilter] || priorityStyles.ALL;
-  const PriorityIcon = currentPriorityStyle.icon;
 
   const loadTickets = async () => {
     try {
@@ -171,78 +150,26 @@ export default function UserTickets() {
                     </div>
 
                     {/* 2. FILTRE STATUT (CUSTOM) */}
-                    <div className="relative">
-                        <button 
-                            onClick={() => setOpenDropdown(openDropdown === 'STATUS' ? null : 'STATUS')}
-                            className={`flex h-10 w-[180px] items-center justify-between rounded-md border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-950 ${currentStatusStyle.color} ${statusFilter === 'ALL' ? 'border-slate-200' : 'border'}`}
-                        >
-                            <div className="flex items-center gap-2">
-                                <StatusIcon className="h-4 w-4" />
-                                <span className="truncate">{currentStatusStyle.label}</span>
-                            </div>
-                            <ChevronDown className="h-4 w-4 opacity-50" />
-                        </button>
-
-                        {openDropdown === 'STATUS' && (
-                            <>
-                                <div className="fixed inset-0 z-10" onClick={() => setOpenDropdown(null)}></div>
-                                <div className="absolute top-full mt-2 left-0 w-[180px] z-20 rounded-md border border-slate-200 bg-white shadow-lg py-1 animate-in fade-in zoom-in-95 duration-100">
-                                    {Object.entries(statusStyles).map(([key, style]) => {
-                                        const Icon = style.icon;
-                                        return (
-                                            <button
-                                                key={key}
-                                                onClick={() => { setStatusFilter(key); setOpenDropdown(null); }}
-                                                className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${statusFilter === key ? 'bg-slate-100 font-medium' : ''}`}
-                                            >
-                                                <div className={`p-1 rounded-full border ${key === 'ALL' ? 'bg-slate-100 border-slate-200' : style.color}`}>
-                                                    <Icon className="h-3 w-3" />
-                                                </div>
-                                                <span className="text-slate-700">{style.label}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </>
-                        )}
-                    </div>
+                    <FilterDropdown
+                        value={statusFilter}
+                        onChange={setStatusFilter}
+                        options={STATUS_STYLES}
+                        openKey={openDropdown}
+                        setOpenKey={setOpenDropdown}
+                        dropdownKey="STATUS"
+                        widthClass="w-[180px]"
+                        />
 
                     {/* 3. FILTRE PRIORITÉ (CUSTOM) */}
-                    <div className="relative">
-                        <button 
-                            onClick={() => setOpenDropdown(openDropdown === 'PRIORITY' ? null : 'PRIORITY')}
-                            className={`flex h-10 w-[180px] items-center justify-between rounded-md border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-950 ${currentPriorityStyle.color} ${priorityFilter === 'ALL' ? 'border-slate-200' : 'border'}`}
-                        >
-                            <div className="flex items-center gap-2">
-                                <PriorityIcon className="h-4 w-4" />
-                                <span className="truncate">{currentPriorityStyle.label}</span>
-                            </div>
-                            <ChevronDown className="h-4 w-4 opacity-50" />
-                        </button>
-
-                        {openDropdown === 'PRIORITY' && (
-                            <>
-                                <div className="fixed inset-0 z-10" onClick={() => setOpenDropdown(null)}></div>
-                                <div className="absolute top-full mt-2 left-0 w-[180px] z-20 rounded-md border border-slate-200 bg-white shadow-lg py-1 animate-in fade-in zoom-in-95 duration-100">
-                                    {Object.entries(priorityStyles).map(([key, style]) => {
-                                        const Icon = style.icon;
-                                        return (
-                                            <button
-                                                key={key}
-                                                onClick={() => { setPriorityFilter(key); setOpenDropdown(null); }}
-                                                className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${priorityFilter === key ? 'bg-slate-100 font-medium' : ''}`}
-                                            >
-                                                <div className={`p-1 rounded-full border ${key === 'ALL' ? 'bg-slate-100 border-slate-200' : style.color}`}>
-                                                    <Icon className="h-3 w-3" />
-                                                </div>
-                                                <span className="text-slate-700">{style.label}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </>
-                        )}
-                    </div>
+                    <FilterDropdown
+                        value={priorityFilter}
+                        onChange={setPriorityFilter}
+                        options={PRIORITY_STYLES}
+                        openKey={openDropdown}
+                        setOpenKey={setOpenDropdown}
+                        dropdownKey="PRIORITY"
+                        widthClass="w-[180px]"
+                        />
 
                     {/* 4. Filtre Date */}
                     <div className="relative w-[160px]">
