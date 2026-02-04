@@ -22,6 +22,7 @@ const adminNavItems = [
   { to: "/admin/users", label: "Utilisateurs", icon: Users },
   { to: "/admin/history", label: "Historique", icon: Archive },
   { to: "/admin/stats", label: "Statistiques", icon: PieChart },
+  { to: "/admin/profile", label: "Profil", icon: UserCircle },
 ];
 
 // Menu pour les USERS
@@ -73,7 +74,7 @@ export default function MainLayout() {
     return "IT Incidents";
   };
 
-  if (!user) return null; // Évite un flash pendant le chargement
+  if (!user) return null; 
 
   return (
     <div className="flex min-h-screen bg-zinc-50 text-zinc-900">

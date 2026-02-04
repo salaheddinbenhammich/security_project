@@ -217,7 +217,6 @@ export default function AdminHistory() {
                         <th className="px-4 py-3">Référence</th>
                         <th className="px-4 py-3">Sujet</th>
                         <th className="px-4 py-3">Priorité</th>
-                        <th className="px-4 py-3">Auteur</th>
                         <th className="px-4 py-3">Date</th>
                         <th className="px-4 py-3">Statut</th>
                         <th className="px-4 py-3 text-right">Actions</th>
@@ -242,14 +241,7 @@ export default function AdminHistory() {
                                         {ticket.priority}
                                     </Badge>
                                 </td>
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center text-xs font-bold">
-                                            {ticket.createdBy?.username?.substring(0,2).toUpperCase()}
-                                        </div>
-                                        <span className="truncate max-w-[100px]">{ticket.createdBy?.username}</span>
-                                    </div>
-                                </td>
+                                
                                 <td className="px-4 py-3 text-slate-500">
                                     {new Date(ticket.createdAt).toLocaleDateString()}
                                 </td>

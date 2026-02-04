@@ -6,14 +6,18 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import MainLayout from "./layouts/MainLayout";
 import UserDashboard from "./pages/UserDashboard";
-import UserTicketDetail from "./pages/UserTicketDetail";
+import UserTicketDetail from "./pages/User/UserTicketDetails";
 
 import AdminTicketsBoard from "./pages/admin/AdminTicketsBoard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTicketDetails from "./pages/admin/AdminTicketDetails";
 import AdminHistory from "./pages/admin/AdminHistory";
-// import AdminHistory from "./pages/admin/AdminHistory";
+import UserProfile from "./pages/UserProfile";
+import CreateTicket from "./pages/User/CreateTicket";
+import UserTickets from "./pages/User/UserTickets";
 import { getToken } from "@/utils/auth";
+import { Toaster } from "sonner";
+import UserTicketDetails from "./pages/User/UserTicketDetails";
 
 // ────────────────────────────────────────────────
 // Route Guards
@@ -58,6 +62,7 @@ const AdminRoute = ({ children }) => {
 
 function App() {
   return (
+    <>
     <BrowserRouter>
       <Routes>
         {/* Public routes – no login needed */}
@@ -70,16 +75,20 @@ function App() {
         {/* Protected routes with MainLayout (sidebar + header) */}
         <Route element={<MainLayout />}>
           {/* ─── USER AREA ─── only ROLE_USER allowed ─── */}
-          <Route path="/user" element={<UserRoute><UserDashboard /></UserRoute>} />
-          <Route path="/user/ticket/:id" element={<UserRoute><UserTicketDetail /></UserRoute>} />
-          <Route path="/user/create" element={<UserRoute><div>Page Création (À faire)</div></UserRoute>} />
-          <Route path="/user/profile" element={<UserRoute><div>Page Profil (À faire)</div></UserRoute>} />
+          {/* <Route path="/user" element={<UserRoute><UserDashboard /></UserRoute>} /> */}
+          <Route path="/user/ticket/:id" element={<UserRoute><UserTicketDetails /></UserRoute>} />
+          <Route path="/user/create" element={<UserRoute><CreateTicket /></UserRoute>} />
+          <Route path="/user/profile" element={<UserRoute><UserProfile /></UserRoute>} />
+
+          <Route path="/user" element={<UserRoute><UserTickets /></UserRoute>} />
+          {/* <Route path="/user/tickets/new" element={<CreateTicket />} /> */}
 
           {/* ─── ADMIN AREA ─── only ROLE_ADMIN allowed ─── */}
           <Route path="/admin" element={<AdminRoute><AdminTicketsBoard /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="/admin/tickets/:id" element={<AdminRoute><AdminTicketDetails /></AdminRoute>} />
           <Route path="/admin/history" element={<AdminRoute><AdminHistory /></AdminRoute>} />
+          <Route path="/admin/profile" element={<AdminRoute><UserProfile /></AdminRoute>} />
           <Route path="/admin/stats" element={<AdminRoute><div>Stats (À faire)</div></AdminRoute>} />
         </Route>
 
@@ -87,6 +96,8 @@ function App() {
         <Route path="*" element={<PublicIncidents />} />
       </Routes>
     </BrowserRouter>
+    <Toaster richColors position="top-right" />
+    </>
   );
 }
 
