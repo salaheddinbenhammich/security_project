@@ -1,42 +1,36 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../services/api'; // Ton fichier api.js
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
-    // --- CODE TEMPORAIRE (MOCK) ---
-    // On fait semblant que ça charge
-    console.log("Tentative de connexion avec", username, password);
-    
-    // On simule un token admin ou user selon ce que tu tapes
-    const fakeToken = "ey...fausse-cle-secrete...";
-    localStorage.setItem('token', fakeToken);
-    
-    // On redirige direct vers le dashboard User
-    navigate('/user');
-
-    // --- QUAND LE BACKEND SERA PRÊT, DÉCOMMENTE ÇA : ---
-    /*
     try {
-      const response = await api.post('/auth/login', { username, password });
-      localStorage.setItem('token', response.data.token);
-      navigate('/user');
+      const response = await api.post("/auth/login", { usernameOrEmail, password });
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify({
+        id: response.data.id,
+        username: response.data.username,
+        email: response.data.email,
+        firstName: response.data.firstName,
+        lastName: response.data.lastName,
+        role: response.data.role,
+      }));
+      navigate("/user");
     } catch (err) {
       setError("Erreur connexion");
     }
-    */
   };
 
   return (
@@ -44,31 +38,31 @@ export default function Login() {
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle>Connexion</CardTitle>
-          <CardDescription>Entre tes identifiants pour accéder aux tickets.</CardDescription>
+          <CardDescription>Entre tes identifiants pour acceder aux tickets.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="grid w-full items-center gap-4">
             <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="username">Utilisateur</Label>
-              <Input 
-                id="username" 
-                placeholder="Ex: admin" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+              <Label htmlFor="username">Utilisateur ou email</Label>
+              <Input
+                id="username"
+                placeholder="Ex: admin"
+                value={usernameOrEmail}
+                onChange={(e) => setUsernameOrEmail(e.target.value)}
               />
             </div>
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="password">Mot de passe</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="••••••" 
+              <Input
+                id="password"
+                type="password"
+                placeholder="******"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
-            
+
             <Button type="submit" className="w-full mt-2">Se connecter</Button>
           </form>
         </CardContent>

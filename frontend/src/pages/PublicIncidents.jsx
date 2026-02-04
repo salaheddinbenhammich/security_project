@@ -118,7 +118,7 @@ export default function PublicIncidents() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-semibold shadow-lg shadow-indigo-200 hover:bg-indigo-500 transition-colors"
           >
             Se connecter pour creer un ticket
-            <span className="text-base">-></span>
+            <span className="text-base">&rarr;</span>
           </Link>
         </footer>
       </div>

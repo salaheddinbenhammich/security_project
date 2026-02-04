@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import UserTicketDetail from "./pages/UserTicketDetail";  // ← NOUVEAU
+import UserProfile from "./pages/UserProfile";
 
 function App() {
   return (
@@ -19,7 +20,8 @@ function App() {
         
         {/* USER */}
         <Route path="/user" element={<UserDashboard />} />
-        <Route path="/user/ticket/:id" element={<UserTicketDetail />} />  {/* ← DÉTAIL TICKET */}
+        <Route path="/user/ticket/:id" element={<UserTicketDetail />} />
+        <Route path="/user/profile" element={<UserProfile />} />  {/* ← DÉTAIL TICKET */}
         
         {/* DEFAULT */}
         <Route path="*" element={<PublicIncidents />} />
