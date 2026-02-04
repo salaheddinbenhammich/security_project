@@ -22,11 +22,21 @@ export default function AdminUsers() {
     try {
         const res = await api.get('/users');
         // Ton backend retourne une Page, donc les users sont dans res.data.content
-        setUsers(res.data.content || []); 
-    } catch (e) {
+            const baseUsers = res.data.content || [];
+
+        // enrichir avec enabled + lock flags
+        const detailed = await Promise.all(
+          baseUsers.map(async (u) => {
+            const detail = await api.get(`/users/${u.id}`);
+            return { ...u, ...detail.data };
+          })
+        );
+
+        setUsers(detailed);
+      } catch (e) {
         console.error("Erreur users", e);
-    }
-  };
+      }
+    };
 
   useEffect(() => { fetchUsers(); }, []);
 
@@ -58,12 +68,10 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
+    <div className="p-1 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Gestion des Utilisateurs</h1>
-        <div className="flex gap-4">
-             <Link to="/admin"><Button variant="outline">← Retour Dashboard</Button></Link>
-             
+        <div className="flex gap-4">             
              {/* MODALE DE CRÉATION */}
              <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild><Button>+ Nouvel Utilisateur</Button></DialogTrigger>

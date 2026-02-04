@@ -69,7 +69,8 @@ public class TicketService {
      * - USER: Can see their own tickets
      * - ADMIN: Can see all tickets
      */
-        public TicketDetailResponse getTicketById(UUID ticketId, UUID userId, Role userRole) {
+    @Transactional(readOnly = true)
+    public TicketDetailResponse getTicketById(UUID ticketId, UUID userId, Role userRole) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new AppException("Ticket not found", HttpStatus.NOT_FOUND));
 
@@ -103,6 +104,7 @@ public class TicketService {
     /**
      * Get user's own tickets
      */
+    @Transactional
     public List<TicketDetailResponse> getMyTickets(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
