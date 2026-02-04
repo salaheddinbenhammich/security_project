@@ -13,18 +13,15 @@ import {
 } from "lucide-react";
 import { getToken } from "@/utils/auth";
 
-// --- 1. CONFIGURATION DES MENUS ---
-
-// Menu pour les ADMINS
+// Admin menu
 const adminNavItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { to: "/admin/users", label: "Utilisateurs", icon: Users },
   { to: "/admin/history", label: "Historique", icon: Archive },
-  // { to: "/admin/stats", label: "Statistiques", icon: PieChart },
   { to: "/admin/profile", label: "Profil", icon: UserCircle },
 ];
 
-// Menu pour les USERS
+// User menu
 const userNavItems = [
   { to: "/user", label: "Mes Tickets", icon: Ticket },
   { to: "/user/create", label: "Nouveau Ticket", icon: PlusCircle },
@@ -59,13 +56,11 @@ export default function MainLayout() {
     }
   }, [navigate]);
 
-  // Titre dynamique
+  // Dynamic page title
   const getPageTitle = () => {
-    // Cherche le label correspondant à l'URL actuelle
     const currentItem = navItems.find(item => item.to === location.pathname);
     if (currentItem) return currentItem.label;
     
-    // Titres par défaut si pas dans le menu
     if (location.pathname.includes("/ticket/")) return "Détails du Ticket";
     if (location.pathname === "/admin") return "Dashboard Admin";
     if (location.pathname === "/user") return "Mes Tickets";
@@ -76,7 +71,7 @@ export default function MainLayout() {
   if (!user) return null; 
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 text-zinc-900">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/10">
       {/* Sidebar Desktop */}
       <SidebarNav 
         navItems={navItems} 
@@ -94,7 +89,7 @@ export default function MainLayout() {
         />
       )}
 
-      {/* Contenu Principal */}
+      {/* Main content */}
       <div className="flex flex-col flex-1 h-screen min-w-0 overflow-hidden">
         <HeaderBar 
           title={getPageTitle()} 
@@ -102,8 +97,8 @@ export default function MainLayout() {
           onToggleSidebar={() => setSidebarOpen(true)} 
         />
 
-        {/* Zone de contenu scrollable */}
-        <main className="flex-1 p-4 overflow-y-auto md:p-8 bg-slate-50/50">
+        {/* Scrollable content area */}
+        <main className="flex-1 p-4 overflow-y-auto md:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { X } from "lucide-react";
+import { X, Shield } from "lucide-react";
 
 export default function SidebarNav({ navItems, variant, onClose, user }) {
   const location = useLocation();
@@ -9,14 +9,15 @@ export default function SidebarNav({ navItems, variant, onClose, user }) {
 
   const containerClass = isMobile
     ? "fixed inset-0 z-40 flex md:hidden"
-    : "hidden md:flex md:w-64 md:flex-col bg-white border-r border-zinc-200";
+    : "hidden md:flex md:w-64 md:flex-col bg-white border-r border-slate-200";
 
   return isMobile ? (
     <div className={containerClass}>
-      <div className="fixed inset-0 bg-black/40" onClick={onClose} />
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
       
-      {/* Le menu lui-même */}
-      <aside className="relative z-50 w-64 bg-white border-r border-zinc-200 flex flex-col h-full">
+      {/* Sidebar panel */}
+      <aside className="relative z-50 w-64 bg-white border-r border-slate-200 flex flex-col h-full shadow-2xl">
         <SidebarContent 
           navItems={navItems} 
           pathname={pathname} 
@@ -33,35 +34,38 @@ export default function SidebarNav({ navItems, variant, onClose, user }) {
   );
 }
 
-// Sous-composant pour le contenu interne (évite de dupliquer le code)
 function SidebarContent({ navItems, pathname, onLinkClick, showClose, user }) {
-  // Récupération sécurisée du rôle ou du nom
   const roleLabel = user?.role === 'ADMIN' ? 'Administrateur' : 'Utilisateur';
   const userName = user?.sub || "Invité";
 
   return (
     <>
-      {/* --- EN-TÊTE DU MENU (LOGO) --- */}
-      <div className="h-16 flex items-center justify-between px-6 border-b border-zinc-200">
-        <div>
-          <div className="text-lg font-bold tracking-tight text-zinc-900">IT Incidents</div>
-          <div className="text-xs text-zinc-500">Gestion de tickets</div>
+      {/* Header with logo */}
+      <div className="h-16 flex items-center justify-between px-5 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl shadow-md">
+            <Shield className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <div className="text-base font-bold tracking-tight text-slate-900">IT Incidents</div>
+            <div className="text-[10px] text-slate-500 font-medium">Gestion de tickets</div>
+          </div>
         </div>
         {showClose && (
-          <button onClick={onLinkClick} className="text-zinc-500 hover:text-zinc-800">
-            <X className="w-6 h-6" />
+          <button 
+            onClick={onLinkClick} 
+            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+          >
+            <X className="w-5 h-5" />
           </button>
         )}
       </div>
 
-      {/* --- LIENS DE NAVIGATION --- */}
+      {/* Navigation links */}
       <nav className="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           
-          // Vérification si le lien est actif
-          // Si on est sur "/admin", on veut que seul "/admin" soit actif, pas "/admin/users"
-          // Sinon, on vérifie si l'URL commence par le lien (ex: /admin/users/create active /admin/users)
           const isActive = item.to === "/admin" || item.to === "/user"
             ? pathname === item.to
             : pathname.startsWith(item.to);
@@ -71,29 +75,40 @@ function SidebarContent({ navItems, pathname, onLinkClick, showClose, user }) {
               key={item.to}
               to={item.to}
               onClick={onLinkClick}
-              className={`flex items-center gap-3 rounded-md px-3 py-2 transition-colors ${
+              className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${
                 isActive
-                  ? "bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-600"
-                  : "text-zinc-700 hover:bg-zinc-100 border-l-4 border-transparent"
+                  ? "bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 font-semibold shadow-sm border border-indigo-100"
+                  : "text-slate-700 hover:bg-slate-50 border border-transparent hover:border-slate-100"
               }`}
             >
-              <Icon size={18} strokeWidth={2} className={isActive ? "text-blue-700" : "text-zinc-500"} />
-              <span>{item.label}</span>
+              <div className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all ${
+                isActive 
+                  ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-md" 
+                  : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
+              }`}>
+                <Icon size={16} strokeWidth={2.5} />
+              </div>
+              <span className="flex-1">{item.label}</span>
+              
+              {/* Active indicator dot */}
+              {isActive && (
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* --- PIED DU MENU (INFO USER) --- */}
-      <div className="border-t border-zinc-200 px-4 py-4 bg-zinc-50">
-        <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-                {userName.substring(0, 2).toUpperCase()}
-            </div>
-            <div className="overflow-hidden">
-                <div className="text-sm font-medium text-zinc-900 truncate">{userName}</div>
-                <div className="text-xs text-zinc-500 truncate">{roleLabel}</div>
-            </div>
+      {/* User info footer */}
+      <div className="border-t border-slate-200 p-4 bg-gradient-to-br from-slate-50 to-white">
+        <div className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+            {userName.substring(0, 2).toUpperCase()}
+          </div>
+          <div className="overflow-hidden flex-1">
+            <div className="text-sm font-semibold text-slate-900 truncate">{userName}</div>
+            <div className="text-xs text-slate-500 truncate">{roleLabel}</div>
+          </div>
         </div>
       </div>
     </>

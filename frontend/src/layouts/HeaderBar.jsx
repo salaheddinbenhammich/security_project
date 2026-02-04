@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Menu, UserCircle } from "lucide-react";
+import { LogOut, Menu, UserCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,72 +15,84 @@ import { logout } from "@/utils/auth";
 export default function HeaderBar({ title, user, onToggleSidebar }) {
   const navigate = useNavigate();
 
-  // Fonction de déconnexion
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  // Calcul des initiales (ex: "Jean Dupont" -> "JD")
   const userName = user?.sub || "User";
   const initials = userName.substring(0, 2).toUpperCase();
   const roleLabel = user?.role === 'ADMIN' ? 'Administrateur' : 'Utilisateur';
 
   const handleProfileClick = () => {
-      if (user?.role === "ADMIN") {
-        navigate('/admin/profile');
-      } else {
-        navigate('/user/profile'); 
-      }
-};
+    if (user?.role === "ADMIN") {
+      navigate('/admin/profile');
+    } else {
+      navigate('/user/profile'); 
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 bg-white border-b shadow-sm md:px-8 border-zinc-200">
+    <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm md:px-6">
       
       <div className="flex items-center gap-4">
+        {/* Mobile menu button */}
         <button
-          className="p-2 transition border rounded-md md:hidden border-zinc-200 text-zinc-600 hover:bg-zinc-100"
+          className="p-2 transition-all border rounded-lg md:hidden border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 active:scale-95"
           onClick={onToggleSidebar}
           aria-label="Ouvrir le menu"
         >
           <Menu size={20} />
         </button>
         
+        {/* Page title */}
         <div>
-            <h1 className="text-lg font-semibold text-zinc-800">{title}</h1>
+          <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
         </div>
       </div>
 
-      {/* --- DROITE : Menu Profil --- */}
+      {/* Right side - User menu */}
       <div className="flex items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 pl-0 hover:bg-transparent focus:ring-0">
-              {/* Infos texte (cachées sur mobile) */}
-              <div className="hidden mr-2 text-right sm:block">
-                <div className="text-sm font-medium leading-tight text-zinc-900">{userName}</div>
-                <div className="text-xs text-zinc-500">{roleLabel}</div>
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-2.5 pl-0 pr-2 hover:bg-slate-50 focus:ring-0 rounded-xl transition-all"
+            >
+              {/* User info (hidden on mobile) */}
+              <div className="hidden mr-1 text-right sm:block">
+                <div className="text-sm font-semibold leading-tight text-slate-900">{userName}</div>
+                <div className="text-xs text-slate-500">{roleLabel}</div>
               </div>
               
-              {/* Avatar rond */}
-              <div className="flex items-center justify-center text-sm font-semibold text-white transition bg-blue-600 rounded-full shadow-sm w-9 h-9 ring-2 ring-white hover:bg-blue-700">
+              {/* Avatar with gradient */}
+              <div className="relative flex items-center justify-center text-sm font-bold text-white transition-all bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl shadow-md w-10 h-10 ring-2 ring-white hover:shadow-lg hover:scale-105">
                 {initials}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-xl" />
               </div>
             </Button>
           </DropdownMenuTrigger>
 
-          {/* Contenu du menu déroulant */}
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent align="end" className="w-56 border-slate-200 shadow-lg">
+            <DropdownMenuLabel className="font-semibold text-slate-900">
+              Mon Compte
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-slate-100" />
             
-            <DropdownMenuItem className="cursor-pointer" onClick={handleProfileClick}>
-              <UserCircle className="w-4 h-4 mr-2 text-zinc-500" />
+            <DropdownMenuItem 
+              className="cursor-pointer text-slate-700 focus:bg-indigo-50 focus:text-indigo-700 transition-colors" 
+              onClick={handleProfileClick}
+            >
+              <UserCircle className="w-4 h-4 mr-2" />
               Mon Profil
             </DropdownMenuItem>
             
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-slate-100" />
             
-            <DropdownMenuItem className="text-red-600 cursor-pointer focus:text-red-600 focus:bg-red-50" onClick={handleLogout}>
+            <DropdownMenuItem 
+              className="text-red-600 cursor-pointer focus:text-red-700 focus:bg-red-50 transition-colors font-medium" 
+              onClick={handleLogout}
+            >
               <LogOut className="w-4 h-4 mr-2" />
               Déconnexion
             </DropdownMenuItem>
