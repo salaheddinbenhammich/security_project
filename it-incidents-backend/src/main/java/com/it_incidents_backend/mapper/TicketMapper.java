@@ -1,6 +1,7 @@
 package com.it_incidents_backend.mapper;
 
 import com.it_incidents_backend.dto.ticket.CreateTicketRequest;
+import com.it_incidents_backend.dto.ticket.TicketAdminResponse;
 import com.it_incidents_backend.dto.ticket.TicketDetailResponse;
 import com.it_incidents_backend.dto.ticket.TicketResponse;
 import com.it_incidents_backend.entities.Ticket;
@@ -19,6 +20,13 @@ public interface TicketMapper {
     // Entity → Detailed Response (for ticket details)
     @Mapping(target = "commentCount", expression = "java(ticket.getComments() != null ? ticket.getComments().size() : 0)")
     TicketDetailResponse toDetailResponse(Ticket ticket);
+
+    // Entity → Admin Response (avec username)
+    @Mapping(target = "createdByUsername", expression = "java(ticket.getCreatedBy() != null ? ticket.getCreatedBy().getUsername() : null)")
+    TicketAdminResponse toAdminResponse(Ticket ticket);
+
+    // List conversion pour admin
+    List<TicketAdminResponse> toAdminResponseList(List<Ticket> tickets);
 
     // List conversion
     List<TicketResponse> toResponseList(List<Ticket> tickets);

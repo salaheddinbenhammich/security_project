@@ -64,6 +64,15 @@ public class TicketService {
     }
 
     /**
+     * Get all tickets for ADMIN (includes creator username)
+     */
+    @Transactional(readOnly = true)
+    public List<TicketAdminResponse> getAllTicketsForAdmin() {
+        List<Ticket> tickets = ticketRepository.findAllByOrderByCreatedAtDesc();
+        return ticketMapper.toAdminResponseList(tickets);
+    }
+
+    /**
      * Get ticket details by ID
      * - PUBLIC: Cannot access
      * - USER: Can see their own tickets

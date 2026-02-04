@@ -88,6 +88,30 @@ public class TicketController {
     }
 
     /**
+     * Get all tickets for ADMIN (includes creator username)
+     * GET /api/tickets/admin
+     */
+    @Operation(
+            summary = "(ADMIN) Get all tickets",
+            description = "Admin only: retrieves all tickets with creator info.")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Tickets retrieved successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TicketAdminResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<TicketAdminResponse>> getAllTicketsForAdmin() {
+        List<TicketAdminResponse> tickets = ticketService.getAllTicketsForAdmin();
+        return ResponseEntity.ok(tickets);
+    }
+
+    /**
      * Get ticket by ID (Authenticated users)
      * - USER: Can only see their own tickets
      * - ADMIN: Can see all tickets
