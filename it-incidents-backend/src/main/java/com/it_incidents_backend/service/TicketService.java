@@ -69,7 +69,7 @@ public class TicketService {
      * - USER: Can see their own tickets
      * - ADMIN: Can see all tickets
      */
-        public TicketDetailResponse getTicketById(Long ticketId, UUID userId, Role userRole) {
+        public TicketDetailResponse getTicketById(UUID ticketId, UUID userId, Role userRole) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new AppException("Ticket not found", HttpStatus.NOT_FOUND));
 
@@ -128,7 +128,7 @@ public class TicketService {
      * Update ticket status (ADMIN only)
      */
     @Transactional
-    public TicketDetailResponse updateTicketStatus(Long ticketId, UpdateTicketStatusRequest request, String adminUsername) {
+    public TicketDetailResponse updateTicketStatus(UUID ticketId, UpdateTicketStatusRequest request, String adminUsername) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new AppException("Ticket not found", HttpStatus.NOT_FOUND));
 
@@ -159,7 +159,7 @@ public class TicketService {
      * Confirm resolution (USER confirms if issue is really resolved)
      */
     @Transactional
-    public TicketDetailResponse confirmResolution(Long ticketId, ConfirmResolutionRequest request, UUID userId) {
+    public TicketDetailResponse confirmResolution(UUID ticketId, ConfirmResolutionRequest request, UUID userId) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new AppException("Ticket not found", HttpStatus.NOT_FOUND));
 

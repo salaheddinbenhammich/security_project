@@ -111,7 +111,7 @@ public class TicketController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<TicketDetailResponse> getTicketById(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             Authentication authentication
     ) {
         UUID userId = SecurityUtils.getUserId(authentication);
@@ -170,7 +170,7 @@ public class TicketController {
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TicketDetailResponse> updateTicketStatus(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody UpdateTicketStatusRequest request,
             Authentication authentication
     ) {
@@ -200,7 +200,7 @@ public class TicketController {
     })
     @PostMapping("/{id}/confirm-resolution")
     public ResponseEntity<TicketDetailResponse> confirmResolution(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody ConfirmResolutionRequest request,
             Authentication authentication
     ) {
@@ -230,6 +230,7 @@ public class TicketController {
     })
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<TicketStatsResponse> getTicketStats() {
         TicketStatsResponse stats = ticketService.getTicketStats();
         return ResponseEntity.ok(stats);
@@ -256,6 +257,7 @@ public class TicketController {
     })
     @GetMapping("/filter/status/{status}")
     @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<List<TicketResponse>> getTicketsByStatus(
             @PathVariable TicketStatus status
     ) {
@@ -283,6 +285,7 @@ public class TicketController {
     })
     @GetMapping("/filter/priority/{priority}")
     @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<List<TicketResponse>> getTicketsByPriority(
             @PathVariable Priority priority
     ) {

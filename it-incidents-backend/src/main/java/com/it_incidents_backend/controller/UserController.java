@@ -50,6 +50,7 @@ public class UserController {
     })
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
+
     Page<UserResponse> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size
@@ -99,6 +100,7 @@ public class UserController {
     })
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+
     UserResponse createUser(
             @RequestBody UserCreateRequest userCreateRequest
     ) {
@@ -116,6 +118,7 @@ public class UserController {
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+
     ResponseEntity<Void> updateUser(
             @PathVariable UUID id,
             @RequestBody UserUpdateRequest userUpdateRequest
@@ -174,6 +177,7 @@ public class UserController {
     })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+
     ResponseEntity<Void> deleteUser(
             @PathVariable UUID id
     ) {

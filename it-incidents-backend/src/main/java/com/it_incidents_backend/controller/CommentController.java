@@ -58,7 +58,7 @@ public class CommentController {
     })
     @PostMapping
     public ResponseEntity<CommentResponse> addComment(
-            @PathVariable Long ticketId,
+            @PathVariable UUID ticketId,
             @Valid @RequestBody CreateCommentRequest request,
             Authentication authentication
     ) {
@@ -91,7 +91,7 @@ public class CommentController {
     })
     @GetMapping
     public ResponseEntity<List<CommentResponse>> getTicketComments(
-            @PathVariable Long ticketId,
+            @PathVariable UUID ticketId,
             Authentication authentication
     ) {
         UUID userId = SecurityUtils.getUserId(authentication);
@@ -123,8 +123,8 @@ public class CommentController {
     })
     @PutMapping("/{commentId}")
     public ResponseEntity<CommentResponse> updateComment(
-            @PathVariable Long ticketId,
-            @PathVariable Long commentId,
+            @PathVariable UUID ticketId,
+            @PathVariable UUID commentId,
             @Valid @RequestBody UpdateCommentRequest request,
             Authentication authentication
     ) {
@@ -151,8 +151,8 @@ public class CommentController {
     @DeleteMapping("/{commentId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteComment(
-            @PathVariable Long ticketId,
-            @PathVariable Long commentId
+            @PathVariable UUID ticketId,
+            @PathVariable UUID commentId
     ) {
         commentService.deleteComment(commentId);
         return ResponseEntity.noContent().build();
