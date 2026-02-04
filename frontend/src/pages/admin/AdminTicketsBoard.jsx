@@ -146,7 +146,7 @@ export default function AdminTicketsBoard() {
       setFilterDate("");
       setFilterPriority("ALL");
   };
-  if (loading) return <div className="flex justify-center p-8 text-slate-500">Chargement...</div>;
+  if (loading) return <div className="p-8 flex justify-center text-slate-500">Chargement...</div>;
 
   return (
     <div className="min-h-screen p-6 space-y-6 bg-slate-50/50">
@@ -180,7 +180,7 @@ export default function AdminTicketsBoard() {
           {/* Filtre Priorite */}
           <div className="relative">
              <div className="absolute left-2.5 top-2.5 text-slate-400 pointer-events-none">
-                <Filter className="w-4 h-4" />
+                <Filter className="h-4 w-4" />
              </div>
              <div className="relative">
              {/* Bouton déclencheur (ressemble à un input) */}
@@ -189,10 +189,10 @@ export default function AdminTicketsBoard() {
                 className={`flex h-10 w-[180px] items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-white focus:outline-none focus:ring-2 focus:ring-slate-950 transition-all ${currentPriorityStyle.color} ${filterPriority === 'ALL' ? 'border-slate-200' : 'border'}`}
              >
                 <div className="flex items-center gap-2">
-                    <CurrentIcon className="w-4 h-4" />
+                    <CurrentIcon className="h-4 w-4" />
                     <span>{currentPriorityStyle.label}</span>
                 </div>
-                <ChevronDown className="w-4 h-4 opacity-50" />
+                <ChevronDown className="h-4 w-4 opacity-50" />
              </button>
 
              {/* Liste déroulante (s'affiche si ouvert) */}
@@ -215,7 +215,7 @@ export default function AdminTicketsBoard() {
                                 >
                                     {/* On affiche le petit badge coloré dans la liste aussi */}
                                     <div className={`p-1 rounded-full border ${key === 'ALL' ? 'bg-slate-100 border-slate-200' : style.color}`}>
-                                        <Icon className="w-3 h-3" />
+                                        <Icon className="h-3 w-3" />
                                     </div>
                                     <span className="text-slate-700">{style.label}</span>
                                 </button>
@@ -384,10 +384,10 @@ function TicketCard({ ticket, type, onAssign, onArchive, onResolve }) {
             <CardFooter className="gap-2 px-4 pt-2 pb-3 mt-1 border-t">
                 {type === 'PENDING' ? (
                     <>
-                        {/* <Button size="sm" variant="outline" className="w-full h-8 text-xs border-dashed hover:bg-red-50 hover:text-red-600" onClick={onArchive}>
+                        {/* <Button size="sm" variant="outline" className="w-full text-xs h-8 hover:bg-red-50 hover:text-red-600 border-dashed" onClick={onArchive}>
                             <Archive className="w-3 h-3 mr-2" /> Archiver
                         </Button> */}
-                        <Button size="sm" className="w-full h-8 text-xs bg-blue-600 hover:bg-blue-700" onClick={onAssign}>
+                        <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-xs h-8" onClick={onAssign}>
                             <PlayCircle className="w-3 h-3 mr-2" /> Assigner
                         </Button>
                     </>

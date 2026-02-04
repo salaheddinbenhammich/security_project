@@ -116,17 +116,17 @@ export default function AdminTicketDetails() {
   };
 
   return (
-    <div className="min-h-screen space-y-6 bg-slate-50">
+    <div className="bg-slate-50 min-h-screen space-y-6">
       {/* HEADER NAVIGATION */}
-      <Button variant="ghost" className="pl-0 hover:bg-transparent" onClick={() => navigate("/admin")}>
+      <Button variant="ghost" className="pl-0 hover:bg-transparent" onClick={() => navigate(-1)}>
         <ArrowLeft className="w-4 h-4 mr-2" /> Retour au Board
       </Button>
 
       {/* TITRE ET ACTIONS */}
-      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
-             <span className="font-mono text-sm text-slate-500">{ticket.ticketNumber}</span>
+             <span className="font-mono text-slate-500 text-sm">{ticket.ticketNumber}</span>
              {getPriorityBadge(ticket.priority)}
              <Badge variant="outline">{ticket.status}</Badge>
           </div>
@@ -160,15 +160,15 @@ export default function AdminTicketDetails() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* GAUCHE : CONVERSATION (2/3) */}
-        <div className="space-y-6 lg:col-span-2">
-            <Card className="border-l-4 shadow-sm border-l-blue-500">
-                <CardHeader className="pb-3 bg-slate-50/50">
+        <div className="lg:col-span-2 space-y-6">
+            <Card className="border-l-4 border-l-blue-500 shadow-sm">
+                <CardHeader className="bg-slate-50/50 pb-3">
                     <div className="flex items-center gap-3">
                         <Avatar>
-                            <AvatarFallback className="font-bold text-blue-700 bg-blue-100">
+                            <AvatarFallback className="bg-blue-100 text-blue-700 font-bold">
                                 {ticket.createdBy?.username?.substring(0,2).toUpperCase() || "U"}
                             </AvatarFallback>
                         </Avatar>
@@ -178,7 +178,7 @@ export default function AdminTicketDetails() {
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="pt-4 leading-relaxed whitespace-pre-wrap text-slate-700">
+                <CardContent className="pt-4 text-slate-700 leading-relaxed whitespace-pre-wrap">
                     {ticket.description}
                 </CardContent>
             </Card>
@@ -187,7 +187,7 @@ export default function AdminTicketDetails() {
 
             {/* Fil de commentaires */}
             <div className="space-y-4">
-                <h3 className="flex items-center gap-2 text-lg font-semibold">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
                     Activité <Badge variant="secondary">{ticket.comments?.length || 0}</Badge>
                 </h3>
                 
@@ -209,14 +209,14 @@ export default function AdminTicketDetails() {
                                 </span>
                                 <span className="text-xs text-slate-400">{new Date(comment.createdAt).toLocaleString()}</span>
                             </div>
-                            <p className="text-sm whitespace-pre-wrap text-slate-700">{comment.content}</p>
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap">{comment.content}</p>
                         </div>
                     </div>
                 ))}
             </div>
 
             {/* Zone de saisie */}
-            <Card className="mt-4 border-t-2 bg-slate-50 border-t-slate-200">
+            <Card className="mt-4 bg-slate-50 border-t-2 border-t-slate-200">
                 <CardContent className="pt-3 space-y-3">
                     <Textarea 
                         placeholder="Écrire une réponse ou une note..." 
@@ -224,10 +224,10 @@ export default function AdminTicketDetails() {
                         onChange={(e) => setNewComment(e.target.value)}
                         className="bg-white"
                     />
-                    <div className="flex items-center justify-between">
+                    <div className="flex justify-between items-center">
                         <div className="flex items-center space-x-2">
                             <Switch id="internal-mode" checked={isInternal} onCheckedChange={setIsInternal} />
-                            <Label htmlFor="internal-mode" className="text-sm cursor-pointer select-none text-slate-600">
+                            <Label htmlFor="internal-mode" className="text-sm text-slate-600 cursor-pointer select-none">
                                 Note interne (Admin uniquement)
                             </Label>
                         </div>
@@ -245,15 +245,15 @@ export default function AdminTicketDetails() {
                 <CardHeader><CardTitle className="text-base">Méta-données</CardTitle></CardHeader>
                 <CardContent className="space-y-4 text-sm">
                     <div className="flex justify-between py-2 border-b">
-                        <span className="flex gap-2 text-slate-500"><Tag size={16}/> Catégorie</span>
+                        <span className="text-slate-500 flex gap-2"><Tag size={16}/> Catégorie</span>
                         <span className="font-medium">{ticket.category}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
-                        <span className="flex gap-2 text-slate-500"><Clock size={16}/> Créé le</span>
+                        <span className="text-slate-500 flex gap-2"><Clock size={16}/> Créé le</span>
                         <span className="font-medium">{new Date(ticket.createdAt).toLocaleDateString()}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
-                        <span className="flex gap-2 text-slate-500"><User size={16}/> Auteur</span>
+                        <span className="text-slate-500 flex gap-2"><User size={16}/> Auteur</span>
                         <div className="text-right">
                              <div className="font-medium">{ticket.createdBy?.firstName} {ticket.createdBy?.lastName}</div>
                              <div className="text-xs text-blue-600">{ticket.createdBy?.email}</div>
@@ -262,11 +262,11 @@ export default function AdminTicketDetails() {
                     
                     {/* Affichage de la solution si résolu */}
                     {ticket.resolution && (
-                         <div className="p-3 mt-4 border border-green-200 rounded-md bg-green-50">
-                            <p className="flex items-center gap-1 mb-1 text-xs font-bold text-green-800">
+                         <div className="bg-green-50 p-3 rounded-md border border-green-200 mt-4">
+                            <p className="text-xs font-bold text-green-800 mb-1 flex items-center gap-1">
                                 <CheckCircle2 size={12}/> Solution apportée :
                             </p>
-                            <p className="text-xs italic text-green-700">{ticket.resolution}</p>
+                            <p className="text-green-700 italic text-xs">{ticket.resolution}</p>
                          </div>
                     )}
                 </CardContent>
