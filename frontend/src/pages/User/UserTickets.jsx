@@ -279,7 +279,7 @@ export default function UserTickets() {
                     </div>
                     <p className="text-slate-900 font-medium">Aucun ticket trouvé</p>
                     <p className="text-slate-500 text-sm mt-1 mb-4">Essayez de modifier vos filtres ou créez une nouvelle demande.</p>
-                    <Button variant="outline" onClick={() => navigate("/user/tickets/new")}>
+                    <Button variant="outline" onClick={() => navigate("/user/create")}>
                         Créer un ticket
                     </Button>
                 </div>

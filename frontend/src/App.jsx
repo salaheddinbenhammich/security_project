@@ -6,7 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import MainLayout from "./layouts/MainLayout";
 import UserDashboard from "./pages/UserDashboard";
-import UserTicketDetail from "./pages/UserTicketDetail";
+import UserTicketDetail from "./pages/User/UserTicketDetails";
 
 import AdminTicketsBoard from "./pages/admin/AdminTicketsBoard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -17,6 +17,7 @@ import CreateTicket from "./pages/User/CreateTicket";
 import UserTickets from "./pages/User/UserTickets";
 import { getToken } from "@/utils/auth";
 import { Toaster } from "sonner";
+import UserTicketDetails from "./pages/User/UserTicketDetails";
 
 // ────────────────────────────────────────────────
 // Route Guards
@@ -75,7 +76,7 @@ function App() {
         <Route element={<MainLayout />}>
           {/* ─── USER AREA ─── only ROLE_USER allowed ─── */}
           {/* <Route path="/user" element={<UserRoute><UserDashboard /></UserRoute>} /> */}
-          <Route path="/user/ticket/:id" element={<UserRoute><UserTicketDetail /></UserRoute>} />
+          <Route path="/user/ticket/:id" element={<UserRoute><UserTicketDetails /></UserRoute>} />
           <Route path="/user/create" element={<UserRoute><CreateTicket /></UserRoute>} />
           <Route path="/user/profile" element={<UserRoute><UserProfile /></UserRoute>} />
 
