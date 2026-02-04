@@ -126,7 +126,7 @@ export default function AdminTicketsBoard() {
   if (loading) return <div className="p-8 flex justify-center text-slate-500">Chargement...</div>;
 
   return (
-    <div className="p-6 bg-slate-50/50 min-h-screen space-y-6">
+    <div className="p-1 bg-slate-50/50 min-h-screen space-y-6">
       
       {/* --- BARRE D'OUTILS DE FILTRES --- */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white p-4 rounded-lg border shadow-sm">
