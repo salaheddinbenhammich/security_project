@@ -14,7 +14,7 @@ export default function AdminDashboard() {
 
   const fetchTickets = async () => {
     try {
-        const res = await api.get('/tickets'); 
+        const res = await api.get('/tickets/admin'); 
         setTickets(res.data);
     } catch (err) {
         console.error("Erreur chargement tickets", err);
@@ -41,8 +41,8 @@ export default function AdminDashboard() {
   });
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
+    <div className="min-h-screen p-8 bg-slate-50">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-slate-900">Supervision Admin</h1>
         <div className="space-x-4">
             <Link to="/admin/users">
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="flex gap-4 mb-6 p-4 bg-white rounded-lg shadow-sm">
+      <div className="flex gap-4 p-4 mb-6 bg-white rounded-lg shadow-sm">
         <Select onValueChange={setFilterStatus} defaultValue="ALL">
             <SelectTrigger className="w-[200px]"><SelectValue placeholder="Statut" /></SelectTrigger>
             <SelectContent>

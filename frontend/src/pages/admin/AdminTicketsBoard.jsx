@@ -54,7 +54,7 @@ export default function AdminTicketsBoard() {
   // 1. Chargement
   const fetchTickets = async () => {
     try {
-      const res = await api.get('/tickets');
+      const res = await api.get('/tickets/admin');
       setTickets(res.data);
       
       const token = localStorage.getItem('token');
@@ -149,18 +149,18 @@ export default function AdminTicketsBoard() {
   if (loading) return <div className="p-8 flex justify-center text-slate-500">Chargement...</div>;
 
   return (
-    <div className="p-6 bg-slate-50/50 min-h-screen space-y-6">
+    <div className="min-h-screen p-6 space-y-6 bg-slate-50/50">
       
       {/* --- BARRE D'OUTILS DE FILTRES --- */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-white p-4 rounded-lg border shadow-sm">
+      <div className="flex flex-col items-start justify-between gap-4 p-4 bg-white border rounded-lg shadow-sm xl:flex-row xl:items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Pilotage Incidents</h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-sm text-slate-500">
              {filteredTickets.length} ticket(s) affiché(s)
           </p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+        <div className="flex flex-wrap items-center w-full gap-3 xl:w-auto">
           
           {/* 1. Recherche Texte */}
           <div className="relative flex-1 min-w-[200px]">
@@ -173,7 +173,7 @@ export default function AdminTicketsBoard() {
             />
              {searchTerm && (
                 <button onClick={() => setSearchTerm("")} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
-                    <XCircle className="h-4 w-4" />
+                    <XCircle className="w-4 h-4" />
                 </button>
             )}
           </div>
@@ -230,11 +230,11 @@ export default function AdminTicketsBoard() {
           {/* 2. Filtre Date */}
           <div className="relative">
              <div className="absolute left-2.5 top-2.5 text-slate-400 pointer-events-none">
-                <Calendar className="h-4 w-4" />
+                <Calendar className="w-4 h-4" />
              </div>
              <input 
                 type="date" 
-                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 pl-9 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full h-10 px-3 py-2 text-sm bg-white border rounded-md border-slate-200 pl-9 ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
              />
@@ -247,7 +247,7 @@ export default function AdminTicketsBoard() {
             className="w-[160px] justify-between"
           >
             {sortDesc ? "Plus récents" : "Plus anciens"}
-            <ArrowUpDown className="h-4 w-4 ml-2 opacity-50" />
+            <ArrowUpDown className="w-4 h-4 ml-2 opacity-50" />
           </Button>
 
           {/* Bouton Reset */}
@@ -260,12 +260,12 @@ export default function AdminTicketsBoard() {
       </div>
 
       {/* --- LE BOARD (Colonnes) --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         
         {/* COLONNE 1 : À TRAITER */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b pb-2 border-orange-200">
-            <h2 className="text-lg font-semibold text-orange-800 flex items-center gap-2">
+          <div className="flex items-center justify-between pb-2 border-b border-orange-200">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-orange-800">
               À Traiter <Badge className="bg-orange-600">{pendingTickets.length}</Badge>
             </h2>
           </div>
@@ -286,8 +286,8 @@ export default function AdminTicketsBoard() {
 
         {/* COLONNE 2 : EN COURS */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b pb-2 border-blue-200">
-            <h2 className="text-lg font-semibold text-blue-800 flex items-center gap-2">
+          <div className="flex items-center justify-between pb-2 border-b border-blue-200">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-blue-800">
               En Cours <Badge className="bg-blue-600">{progressTickets.length}</Badge>
             </h2>
           </div>
@@ -328,7 +328,7 @@ export default function AdminTicketsBoard() {
 // --- SOUS-COMPOSANT : CARTE TICKET (SÉCURISÉ) ---
 function TicketCard({ ticket, type, onAssign, onArchive, onResolve }) {
     // SÉCURITÉ : On vérifie si createdBy existe, sinon on met "Inconnu"
-    const creatorName = ticket.createdBy?.username || ticket.authorUsername || "Inconnu";
+    const creatorName = ticket.createdByUsername || "Inconnu";
     const initials = creatorName.substring(0, 2).toUpperCase();
     
     // SÉCURITÉ : Description
@@ -345,9 +345,9 @@ function TicketCard({ ticket, type, onAssign, onArchive, onResolve }) {
 
     return (
         <Card className={`border shadow-sm hover:shadow-md transition-all group ${type === 'PENDING' ? 'border-l-4 border-l-orange-500' : 'border-l-4 border-l-blue-500'}`}>
-            <CardHeader className="pb-2 pt-4 px-4 flex flex-row justify-between items-start space-y-0">
+            <CardHeader className="flex flex-row items-start justify-between px-4 pt-4 pb-2 space-y-0">
                 <div className="flex gap-3">
-                    <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 border border-slate-200">
+                    <div className="flex items-center justify-center text-xs font-bold border rounded-full h-9 w-9 bg-slate-100 text-slate-600 border-slate-200">
                         {initials}
                     </div>
                     <div>
@@ -367,10 +367,10 @@ function TicketCard({ ticket, type, onAssign, onArchive, onResolve }) {
             
             <CardContent className="px-4 py-2">
                 <Link to={`/admin/tickets/${ticket.id}`}>
-                    <h3 className="font-medium text-slate-800 group-hover:text-blue-600 transition-colors mb-1">
+                    <h3 className="mb-1 font-medium transition-colors text-slate-800 group-hover:text-blue-600">
                         {ticket.title}
                     </h3>
-                    <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
+                    <p className="text-sm leading-relaxed text-slate-500 line-clamp-2">
                         {description}
                     </p>
                 </Link>
@@ -381,7 +381,7 @@ function TicketCard({ ticket, type, onAssign, onArchive, onResolve }) {
                 </div>
             </CardContent>
 
-            <CardFooter className="px-4 pb-3 pt-2 border-t mt-1 gap-2">
+            <CardFooter className="gap-2 px-4 pt-2 pb-3 mt-1 border-t">
                 {type === 'PENDING' ? (
                     <>
                         {/* <Button size="sm" variant="outline" className="w-full text-xs h-8 hover:bg-red-50 hover:text-red-600 border-dashed" onClick={onArchive}>
@@ -393,10 +393,10 @@ function TicketCard({ ticket, type, onAssign, onArchive, onResolve }) {
                     </>
                 ) : (
                     <>
-                         <Button size="sm" variant="outline" className="w-full text-xs h-8 hover:bg-slate-100" onClick={onArchive}>
+                         <Button size="sm" variant="outline" className="w-full h-8 text-xs hover:bg-slate-100" onClick={onArchive}>
                             <Archive className="w-3 h-3 mr-2" /> Annuler
                         </Button>
-                        <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-xs h-8" onClick={onResolve}>
+                        <Button size="sm" className="w-full h-8 text-xs bg-green-600 hover:bg-green-700" onClick={onResolve}>
                             <CheckCircle2 className="w-3 h-3 mr-2" /> Résoudre
                         </Button>
                     </>
@@ -408,7 +408,7 @@ function TicketCard({ ticket, type, onAssign, onArchive, onResolve }) {
 
 function EmptyState({ text }) {
     return (
-        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-lg text-slate-400 bg-slate-50/50">
+        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg border-slate-200 text-slate-400 bg-slate-50/50">
             <User className="w-8 h-8 mb-2 opacity-20" />
             <p className="text-sm">{text}</p>
         </div>

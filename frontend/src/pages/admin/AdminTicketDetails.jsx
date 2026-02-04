@@ -202,8 +202,8 @@ export default function AdminTicketDetails() {
                             {comment.isInternal && <div className="w-0.5 h-full bg-amber-200 mt-2"></div>}
                         </div>
                         <div className={`flex-1 p-3 rounded-lg ${comment.isInternal ? "bg-amber-50 border border-amber-100" : "bg-white border"}`}>
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="font-semibold text-sm">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-sm font-semibold">
                                     {comment.authorFullName || comment.authorUsername}
                                     {comment.isInternal && <span className="ml-2 text-[10px] text-amber-600 border border-amber-200 px-1 rounded bg-amber-50 flex items-center inline-flex gap-1"><ShieldAlert size={10}/> INTERNE</span>}
                                 </span>

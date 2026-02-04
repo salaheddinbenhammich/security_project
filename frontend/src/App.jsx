@@ -12,47 +12,78 @@ import AdminTicketsBoard from "./pages/admin/AdminTicketsBoard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTicketDetails from "./pages/admin/AdminTicketDetails";
 import AdminHistory from "./pages/admin/AdminHistory";
+// import AdminHistory from "./pages/admin/AdminHistory";
+import { getToken } from "@/utils/auth";
 
+// ────────────────────────────────────────────────
+// Route Guards
+// ────────────────────────────────────────────────
 
-const PrivateRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" replace />;
+// 1. No authentication required (public content)
+const PublicRoute = ({ children }) => {
+  return children;
 };
 
-// Vérifie si Admin (stricte)
-const AdminRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
+// 2. Must be logged in + ROLE_USER (admins are redirected to /admin)
+const UserRoute = ({ children }) => {
+  const token = getToken();
   if (!token) return <Navigate to="/login" replace />;
+
   try {
     const decoded = jwtDecode(token);
-    if (decoded.role !== 'ADMIN') return <Navigate to="/user" replace />;
+    if (decoded.role !== "USER") {
+      return <Navigate to="/admin" replace />;
+    }
     return children;
-  } catch (e) { return <Navigate to="/login" replace />; }
+  } catch (e) {
+    return <Navigate to="/login" replace />;
+  }
+};
+
+// 3. Must be logged in + ROLE_ADMIN (users are redirected to /user)
+const AdminRoute = ({ children }) => {
+  const token = getToken();
+  if (!token) return <Navigate to="/login" replace />;
+
+  try {
+    const decoded = jwtDecode(token);
+    if (decoded.role !== "ADMIN") {
+      return <Navigate to="/user" replace />;
+    }
+    return children;
+  } catch (e) {
+    return <Navigate to="/login" replace />;
+  }
 };
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<PublicIncidents />} />
+        {/* Public routes – no login needed */}
+        <Route path="/" element={<PublicRoute><PublicIncidents /></PublicRoute>} />
+
+        {/* Authentication pages */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
-        <Route element={<MainLayout />}> 
-          
-          <Route path="/user" element={<PrivateRoute><UserDashboard /></PrivateRoute>} />
-          <Route path="/user/ticket/:id" element={<PrivateRoute><UserTicketDetail /></PrivateRoute>} />
-          <Route path="/user/create" element={<PrivateRoute><div>Page Création (À faire)</div></PrivateRoute>} />
-          <Route path="/user/profile" element={<PrivateRoute><div>Page Profil (À faire)</div></PrivateRoute>} />
 
+        {/* Protected routes with MainLayout (sidebar + header) */}
+        <Route element={<MainLayout />}>
+          {/* ─── USER AREA ─── only ROLE_USER allowed ─── */}
+          <Route path="/user" element={<UserRoute><UserDashboard /></UserRoute>} />
+          <Route path="/user/ticket/:id" element={<UserRoute><UserTicketDetail /></UserRoute>} />
+          <Route path="/user/create" element={<UserRoute><div>Page Création (À faire)</div></UserRoute>} />
+          <Route path="/user/profile" element={<UserRoute><div>Page Profil (À faire)</div></UserRoute>} />
+
+          {/* ─── ADMIN AREA ─── only ROLE_ADMIN allowed ─── */}
           <Route path="/admin" element={<AdminRoute><AdminTicketsBoard /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="/admin/tickets/:id" element={<AdminRoute><AdminTicketDetails /></AdminRoute>} />
           <Route path="/admin/history" element={<AdminRoute><AdminHistory /></AdminRoute>} />
           <Route path="/admin/stats" element={<AdminRoute><div>Stats (À faire)</div></AdminRoute>} />
-          
         </Route>
 
+        {/* Catch-all – redirect unknown paths to public home */}
         <Route path="*" element={<PublicIncidents />} />
       </Routes>
     </BrowserRouter>

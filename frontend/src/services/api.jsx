@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getToken } from '../utils/auth';
 
 // C'est l'adresse du serveur de tes collègues.
 const API_URL = 'http://localhost:8080/api'; 
@@ -14,7 +15,7 @@ const api = axios.create({
 // à toutes tes requêtes si l'utilisateur est connecté.
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (token) {
             config.headers['Authorization'] = 'Bearer ' + token;
         }

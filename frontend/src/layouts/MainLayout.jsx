@@ -12,6 +12,7 @@ import {
   PlusCircle, 
   UserCircle 
 } from "lucide-react";
+import { getToken } from "@/utils/auth";
 
 // --- 1. CONFIGURATION DES MENUS ---
 
@@ -38,7 +39,7 @@ export default function MainLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = getToken();
     if (token) {
       try {
         const decoded = jwtDecode(token);
@@ -75,7 +76,7 @@ export default function MainLayout() {
   if (!user) return null; // Évite un flash pendant le chargement
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 flex">
+    <div className="flex min-h-screen bg-zinc-50 text-zinc-900">
       {/* Sidebar Desktop */}
       <SidebarNav 
         navItems={navItems} 
@@ -94,7 +95,7 @@ export default function MainLayout() {
       )}
 
       {/* Contenu Principal */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <div className="flex flex-col flex-1 h-screen min-w-0 overflow-hidden">
         <HeaderBar 
           title={getPageTitle()} 
           user={user} 
@@ -102,7 +103,7 @@ export default function MainLayout() {
         />
 
         {/* Zone de contenu scrollable */}
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto bg-slate-50/50">
+        <main className="flex-1 p-4 overflow-y-auto md:p-8 bg-slate-50/50">
           <Outlet />
         </main>
       </div>

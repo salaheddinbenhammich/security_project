@@ -38,23 +38,23 @@ export default function PublicIncidents() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-violet-50 via-violet-100 to-violet-200 px-4 py-10">
-      <div className="mx-auto max-w-4xl space-y-8">
-        <header className="text-center space-y-3">
-          <p className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white/70 px-3 py-1 text-xs font-medium text-violet-600">
+    <div className="min-h-screen px-4 py-10 bg-gradient-to-b from-violet-50 via-violet-100 to-violet-200">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <header className="space-y-3 text-center">
+          <p className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium border rounded-full border-violet-200 bg-white/70 text-violet-600">
             <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
             Vue publique des incidents IT
           </p>
           <h1 className="text-4xl font-bold tracking-tight text-violet-700">
             Incidents IT
           </h1>
-          <p className="text-sm md:text-base text-slate-600 max-w-md mx-auto">
+          <p className="max-w-md mx-auto text-sm md:text-base text-slate-600">
             Liste publique des incidents en cours (titre, statut, priorite, date).
             Les details sensibles restent reserves aux utilisateurs authentifies.
           </p>
         </header>
 
-        <Card className="border-violet-200 bg-white/90 shadow-xl shadow-violet-200/60">
+        <Card className="shadow-xl border-violet-200 bg-white/90 shadow-violet-200/60">
           <CardHeader className="border-b border-violet-100">
             <div className="flex items-center justify-between gap-2">
               <div>
@@ -62,7 +62,7 @@ export default function PublicIncidents() {
                   Incidents en cours
                   <Badge
                     variant="secondary"
-                    className="bg-violet-100 text-violet-700 border-violet-200 text-xs"
+                    className="text-xs bg-violet-100 text-violet-700 border-violet-200"
                   >
                     {incidents.length}
                   </Badge>
@@ -74,15 +74,15 @@ export default function PublicIncidents() {
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-3 pt-4">
+          <CardContent className="pt-4 space-y-3">
             {loading && <p className="text-sm text-slate-500">Chargement...</p>}
             {!loading && incidents.map((incident) => (
               <div
                 key={incident.id}
-                className="group flex items-center justify-between gap-4 p-4 border border-violet-200 rounded-xl bg-white hover:bg-violet-50 transition-colors"
+                className="flex items-center justify-between gap-4 p-4 transition-colors bg-white border group border-violet-200 rounded-xl hover:bg-violet-50"
               >
                 <div className="flex-1">
-                  <div className="font-semibold text-base md:text-lg text-slate-900 group-hover:text-violet-700 mb-1">
+                  <div className="mb-1 text-base font-semibold md:text-lg text-slate-900 group-hover:text-violet-700">
                     {incident.title}
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-xs md:text-sm text-slate-500">
@@ -93,7 +93,7 @@ export default function PublicIncidents() {
                         {incident.priority}
                       </span>
                     </span>
-                    <span>•</span>
+                    <span>-</span>
                     <span>Cree le {formatDate(incident.createdAt)}</span>
                   </div>
                 </div>
@@ -109,8 +109,8 @@ export default function PublicIncidents() {
           </CardContent>
         </Card>
 
-        <footer className="text-center pt-8 border-t border-violet-200 mt-4">
-          <p className="text-sm text-slate-600 mb-2">
+        <footer className="pt-8 mt-4 text-center border-t border-violet-200">
+          <p className="mb-2 text-sm text-slate-600">
             Tu rencontres un probleme et tu veux le declarer ?
           </p>
           <Link
