@@ -28,6 +28,9 @@ import com.it_incidents_backend.mapper.TicketMapper;
 import com.it_incidents_backend.mapper.UserMapper;
 import com.it_incidents_backend.repository.TicketRepository;
 import com.it_incidents_backend.repository.UserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.it_incidents_backend.util.SecurityUtils;
 
 @Service
 public class UserServicesImp implements UserServices {
@@ -297,13 +300,14 @@ public class UserServicesImp implements UserServices {
     public void deleteUser(UUID id) {
         User user = this.userRepository.findById(id)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-        
-        // ========== HARD DELETE ==========
-        // Alternative: Use soft delete for audit trail
-        // user.softDelete("admin");
-        // this.userRepository.save(user);
-        
-        this.userRepository.delete(user);
+
+        // ========== GET CURRENT ADMIN USERNAME ==========
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentAdminUsername = SecurityUtils.getUsername(authentication);
+
+        // ========== SOFT DELETE ==========
+        user.softDelete(currentAdminUsername);
+        this.userRepository.save(user);
     }
 
     // ========== ACCOUNT MANAGEMENT METHODS ==========

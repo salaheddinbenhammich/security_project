@@ -16,6 +16,8 @@ public class AuthResponse {
 
     private String token;           // JWT access token (short-lived)
     private String refreshToken;    // JWT refresh token (long-lived)
+
+    @Builder.Default
     private String type = "Bearer"; // Token type
     private UUID id;
     private String username;

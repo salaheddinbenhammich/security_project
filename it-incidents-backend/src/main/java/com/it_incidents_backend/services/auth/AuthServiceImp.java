@@ -110,7 +110,7 @@ public class AuthServiceImp implements AuthService {
         // Soft-deleted accounts appear deleted but data is preserved
         if (user.getDeleted()) {
             throw new AppException(
-                    "Account not found", 
+                    "Invalid credentials",
                     HttpStatus.UNAUTHORIZED
             );
         }
