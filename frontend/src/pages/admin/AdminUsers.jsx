@@ -76,7 +76,8 @@ export default function AdminUsers() {
     ALL: { label: "Tous Statuts", color: "bg-white text-slate-700 border-slate-200", icon: Filter },
     ACTIVE: { label: "Actif", color: "bg-green-100 text-green-700 border-green-200", icon: UserCheck },
     DISABLED: { label: "Désactivé", color: "bg-red-100 text-red-700 border-red-200", icon: UserMinus },
-    LOCKED: { label: "Verrouillé", color: "bg-orange-100 text-orange-700 border-orange-200", icon: Lock }
+    LOCKED: { label: "Verrouillé", color: "bg-orange-100 text-orange-700 border-orange-200", icon: Lock },
+    DELETED: { label: "Supprimé", color: "bg-rose-100 text-rose-700 border-rose-200", icon: Trash2 }
   };
 
   const currentRoleStyle = roleStyles[roleFilter] || roleStyles.ALL;
@@ -120,6 +121,8 @@ export default function AdminUsers() {
     } else if (statusFilter === "DISABLED") {
       matchesStatus = user.enabled === false;
     } else if (statusFilter === "LOCKED") {
+    } else if (statusFilter === "DELETED") {
+      matchesStatus = user.deleted === true;
       matchesStatus = user.accountNonLocked === false;
     }
 
@@ -190,7 +193,8 @@ export default function AdminUsers() {
       setUsers(users.filter(u => u.id !== userToDelete.id));
       setIsDeleteOpen(false);
       setUserToDelete(null);
-      toast.success("Utilisateur supprimé avec succès");
+      fetchUsers(); // refetch from server to get updated data
+    toast.success("Utilisateur supprimé avec succès");
     } catch (err) {
       toast.error(err.response?.data?.message || "Impossible de supprimer l'utilisateur");
     }
@@ -254,6 +258,15 @@ export default function AdminUsers() {
   const getUserStatusBadge = (user) => {
     const status = getUserStatus(user);
     
+    
+    if (user.deleted === true) {
+      return (
+        <Badge variant="outline" className="font-semibold text-rose-700 bg-rose-100 border-rose-200">
+          <Trash2 className="w-3 h-3 mr-1" />
+          Supprimé
+        </Badge>
+      );
+    }
     if (status === "LOCKED") {
       return (
         <Badge variant="outline" className="font-semibold text-orange-700 bg-orange-100 border-orange-200">

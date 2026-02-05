@@ -19,7 +19,8 @@ import {
   Activity,
   Settings,
   Sparkles,
-  Key
+  Key,
+  Trash2
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,6 +101,7 @@ export default function UserDetails() {
   const getUserStatus = () => {
     if (!user) return null;
     if (user.accountNonLocked === false) return "LOCKED";
+    if (user.deleted === true) return "DELETED";
     if (user.enabled === false) return "DISABLED";
     return "ACTIVE";
   };
@@ -107,6 +109,15 @@ export default function UserDetails() {
   const getStatusBadge = () => {
     const status = getUserStatus();
     
+    
+    if (status === "DELETED") {
+      return (
+        <Badge variant="outline" className="font-semibold text-rose-700 bg-rose-100 border-rose-200">
+          <Trash2 className="w-4 h-4 mr-1.5" />
+          Supprimé
+        </Badge>
+      );
+    }
     if (status === "LOCKED") {
       return (
         <Badge variant="outline" className="font-semibold text-orange-700 bg-orange-100 border-orange-200">
@@ -426,6 +437,18 @@ export default function UserDetails() {
                       <p className="mb-1 text-xs font-semibold tracking-wide uppercase text-slate-500">Mot de passe changé</p>
                       <p className="text-base font-medium text-slate-900">{formatDate(user.passwordChangedAt)}</p>
                     </div>
+                    {user.deleted && (
+                      <>
+                        <div>
+                          <p className="mb-1 text-xs font-semibold tracking-wide uppercase text-rose-500">Supprimé le</p>
+                          <p className="text-base font-medium text-rose-900">{formatDate(user.deletedAt)}</p>
+                        </div>
+                        <div>
+                          <p className="mb-1 text-xs font-semibold tracking-wide uppercase text-rose-500">Supprimé par</p>
+                          <p className="text-base font-medium text-rose-900">{user.deletedBy || "Système"}</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>
