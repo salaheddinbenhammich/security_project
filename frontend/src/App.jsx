@@ -3,16 +3,17 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import { jwtDecode } from "jwt-decode";
 
 import PublicIncidents from "./pages/PublicIncidents";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ChangeExpiredPassword from "./pages/auth/ChangeExpiredPassword";
 import MainLayout from "./layouts/MainLayout";
-import UserDashboard from "./pages/UserDashboard";
+import UserDashboard from "./pages/User/UserDashboard";
 import UserTicketDetails from "./pages/User/UserTicketDetails";
 import AdminTicketsBoard from "./pages/admin/AdminTicketsBoard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTicketDetails from "./pages/admin/AdminTicketDetails";
 import AdminHistory from "./pages/admin/AdminHistory";
-import UserProfile from "./pages/UserProfile";
+import UserProfile from "./pages/common/UserProfile";
 import CreateTicket from "./pages/User/CreateTicket";
 import UserTickets from "./pages/User/UserTickets";
 import UserDetails from "./pages/admin/UserDetails";
@@ -30,6 +31,11 @@ function SessionMonitor() {
   // check inactivity every minute
   useEffect(() => {
     const interval = setInterval(() => {
+      // ✅ Skip inactivity check on password change page
+      if (location.pathname === '/change-expired-password') {
+        return;
+      }
+      
       if (isAuthenticated() && isSessionInactive()) {
         clearSession();
         navigate("/login", { replace: true });
@@ -37,10 +43,15 @@ function SessionMonitor() {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [navigate]);
+  }, []); // ✅ FIXED: Empty dependency array
 
   // update activity on navigation
   useEffect(() => {
+    // ✅ Skip activity update on password change page
+    if (location.pathname === '/change-expired-password') {
+      return;
+    }
+    
     if (isAuthenticated()) updateActivity();
   }, [location.pathname]);
 
@@ -93,21 +104,29 @@ function AppRoutes() {
       <SessionMonitor />
 
       <Routes>
-        {/* Public */}
+        {/* ========== PUBLIC ROUTES ========== */}
         <Route path="/" element={<PublicRoute><PublicIncidents /></PublicRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        
+        {/* ========== PASSWORD EXPIRATION ROUTE ========== */}
+        {/* 
+          This route is public (no authentication required) because users 
+          with expired passwords cannot login. They need to change their 
+          password first before they can authenticate.
+        */}
+        <Route path="/change-expired-password" element={<ChangeExpiredPassword />} />
 
-        {/* Layout */}
+        {/* ========== AUTHENTICATED ROUTES (WITH LAYOUT) ========== */}
         <Route element={<MainLayout />}>
 
-          {/* USER */}
+          {/* USER ROUTES */}
           <Route path="/user" element={<UserRoute><UserTickets /></UserRoute>} />
           <Route path="/user/ticket/:id" element={<UserRoute><UserTicketDetails /></UserRoute>} />
           <Route path="/user/create" element={<UserRoute><CreateTicket /></UserRoute>} />
           <Route path="/user/profile" element={<UserRoute><UserProfile /></UserRoute>} />
 
-          {/* ADMIN */}
+          {/* ADMIN ROUTES */}
           <Route path="/admin" element={<AdminRoute><AdminTicketsBoard /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="/admin/users/:userId" element={<AdminRoute><UserDetails /></AdminRoute>} />
@@ -116,6 +135,7 @@ function AppRoutes() {
           <Route path="/admin/profile" element={<AdminRoute><UserProfile /></AdminRoute>} />
         </Route>
 
+        {/* Catch-all route */}
         <Route path="*" element={<PublicIncidents />} />
       </Routes>
     </>

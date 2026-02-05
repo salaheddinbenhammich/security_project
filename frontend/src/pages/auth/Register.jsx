@@ -43,6 +43,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [authChecking, setAuthChecking] = useState(true);
+  const [showPasswordStrength, setShowPasswordStrength] = useState(false);
   
   const navigate = useNavigate();
 
@@ -257,7 +258,7 @@ export default function Register() {
                   <User className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-slate-400" />
                   <Input
                     id="username"
-                    placeholder="jeanmartin"
+                    placeholder="jean_martin"
                     value={form.username}
                     onChange={onChange("username")}
                     className="text-sm pl-9 h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
@@ -275,7 +276,7 @@ export default function Register() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="vous@exemple.com"
+                    placeholder="user@example.com"
                     value={form.email}
                     onChange={onChange("email")}
                     className="text-sm pl-9 h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
@@ -347,6 +348,8 @@ export default function Register() {
                     placeholder="••••••••"
                     value={form.password}
                     onChange={onChange("password")}
+                    onFocus={() => setShowPasswordStrength(true)}
+                    onBlur={() => setShowPasswordStrength(false)}
                     className="text-sm pl-9 pr-9 h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                     required
                   />
@@ -357,6 +360,21 @@ export default function Register() {
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
+
+                  {/* Password Strength Popover - Comic Bubble Style */}
+                  {showPasswordStrength && form.password && (
+                    <div className="absolute z-50 left-0 -top-2 -translate-y-full w-[280px] animate-in fade-in zoom-in-95 duration-200">
+                      <div className="relative p-4 bg-white border-2 border-indigo-300 rounded-xl shadow-xl">
+                        {/* Comic-style tail pointing down */}
+                        <div className="absolute left-8 -bottom-3 w-6 h-6">
+                          <div className="w-4 h-4 bg-white border-r-2 border-b-2 border-indigo-300 rotate-45 transform origin-center"></div>
+                        </div>
+                        
+                        {/* Password strength content */}
+                        <PasswordStrength password={form.password} />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -378,14 +396,6 @@ export default function Register() {
                 </div>
               </div>
             </div>
-
-            {/* ========== PASSWORD STRENGTH INDICATOR ========== */}
-            {/* Show real-time password validation feedback */}
-            {form.password && (
-              <div className="p-3 border rounded-lg bg-slate-50 border-slate-200">
-                <PasswordStrength password={form.password} />
-              </div>
-            )}
 
             {/* ========== ERROR MESSAGE ========== */}
             {error && (

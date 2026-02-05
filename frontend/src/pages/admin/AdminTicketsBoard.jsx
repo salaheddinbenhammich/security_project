@@ -15,7 +15,9 @@ import {
   ArrowUpDown,
   XCircle,
   ChevronDown,
-  Ticket as TicketIcon
+  Ticket as TicketIcon,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,8 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ConfirmArchiveDialog from "@/components/ticket/ConfirmArchiveDialog";
+import { toast } from "sonner";
 
 export default function AdminTicketsBoard() {
   const [tickets, setTickets] = useState([]);
@@ -40,6 +44,15 @@ export default function AdminTicketsBoard() {
   const [resolutionText, setResolutionText] = useState("");
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [isResolveDialogOpen, setIsResolveDialogOpen] = useState(false);
+  
+  // États pour annulation
+  const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
+  const [ticketToArchive, setTicketToArchive] = useState(null);
+
+  // États pour pagination
+  const [pendingPage, setPendingPage] = useState(1);
+  const [progressPage, setProgressPage] = useState(1);
+  const ITEMS_PER_PAGE = 3;
 
   const priorityStyles = {
     ALL:      { label: "Toutes Priorités", color: "bg-white border-slate-200 text-slate-700", icon: Filter },
@@ -106,6 +119,24 @@ export default function AdminTicketsBoard() {
   const pendingTickets = sortedTickets.filter(t => t.status === 'PENDING');
   const progressTickets = sortedTickets.filter(t => t.status === 'IN_PROGRESS');
 
+  // --- PAGINATION ---
+  const totalPendingPages = Math.ceil(pendingTickets.length / ITEMS_PER_PAGE);
+  const totalProgressPages = Math.ceil(progressTickets.length / ITEMS_PER_PAGE);
+
+  const startPendingIndex = (pendingPage - 1) * ITEMS_PER_PAGE;
+  const endPendingIndex = startPendingIndex + ITEMS_PER_PAGE;
+  const paginatedPendingTickets = pendingTickets.slice(startPendingIndex, endPendingIndex);
+
+  const startProgressIndex = (progressPage - 1) * ITEMS_PER_PAGE;
+  const endProgressIndex = startProgressIndex + ITEMS_PER_PAGE;
+  const paginatedProgressTickets = progressTickets.slice(startProgressIndex, endProgressIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPendingPage(1);
+    setProgressPage(1);
+  }, [searchTerm, filterDate, filterPriority, sortDesc]);
+
   // --- ACTIONS ---
   const handleAssignToMe = async (ticketId) => {
     try {
@@ -114,19 +145,30 @@ export default function AdminTicketsBoard() {
         content: `Ticket pris en charge par ${currentUser}.`, 
         isInternal: true 
       });
+      toast.success("Ticket pris en charge");
       fetchTickets();
     } catch (err) { 
-      alert("Erreur lors de l'assignation"); 
+      toast.error("Erreur lors de l'assignation");
     }
   };
 
-  const handleArchive = async (ticketId) => {
-    if(!window.confirm("Archiver ce ticket ?")) return;
+  const openArchiveDialog = (ticket) => {
+    setTicketToArchive(ticket);
+    setIsArchiveDialogOpen(true);
+  };
+
+  const handleArchive = async () => {
+    if (!ticketToArchive) return;
+    
     try {
-      await api.put(`/tickets/${ticketId}/status`, { status: "CANCELLED" });
+      await api.put(`/tickets/${ticketToArchive.id}/status`, { status: "CANCELLED" });
+      toast.success("Ticket annulé");
       fetchTickets();
     } catch (err) { 
-      alert("Erreur archivage"); 
+      toast.error("Erreur lors de l'annulation");
+    } finally {
+      setIsArchiveDialogOpen(false);
+      setTicketToArchive(null);
     }
   };
 
@@ -139,9 +181,10 @@ export default function AdminTicketsBoard() {
       });
       setIsResolveDialogOpen(false);
       setResolutionText("");
+      toast.success("Ticket résolu");
       fetchTickets();
     } catch (err) { 
-      alert("Erreur résolution"); 
+      toast.error("Erreur lors de la résolution");
     }
   };
 
@@ -302,17 +345,26 @@ export default function AdminTicketsBoard() {
           </div>
           
           <div className="space-y-3">
-            {pendingTickets.map(ticket => (
+            {paginatedPendingTickets.map(ticket => (
               <TicketCard 
                 key={ticket.id} 
                 ticket={ticket} 
                 type="PENDING"
                 onAssign={() => handleAssignToMe(ticket.id)}
-                onArchive={() => handleArchive(ticket.id)}
+                onArchive={() => openArchiveDialog(ticket)}
               />
             ))}
-            {pendingTickets.length === 0 && <EmptyState text="Aucun ticket à traiter" />}
+            {paginatedPendingTickets.length === 0 && <EmptyState text="Aucun ticket à traiter" />}
           </div>
+
+          {/* Pagination pour À TRAITER */}
+          {totalPendingPages > 1 && (
+            <Pagination
+              currentPage={pendingPage}
+              totalPages={totalPendingPages}
+              onPageChange={setPendingPage}
+            />
+          )}
         </div>
 
         {/* COLONNE 2 : EN COURS */}
@@ -325,19 +377,36 @@ export default function AdminTicketsBoard() {
           </div>
           
           <div className="space-y-3">
-            {progressTickets.map(ticket => (
+            {paginatedProgressTickets.map(ticket => (
               <TicketCard 
                 key={ticket.id} 
                 ticket={ticket} 
                 type="PROGRESS"
                 onResolve={() => { setSelectedTicketId(ticket.id); setIsResolveDialogOpen(true); }}
-                onArchive={() => handleArchive(ticket.id)}
+                onArchive={() => openArchiveDialog(ticket)}
               />
             ))}
-            {progressTickets.length === 0 && <EmptyState text="Aucun ticket en cours" />}
+            {paginatedProgressTickets.length === 0 && <EmptyState text="Aucun ticket en cours" />}
           </div>
+
+          {/* Pagination pour EN COURS */}
+          {totalProgressPages > 1 && (
+            <Pagination
+              currentPage={progressPage}
+              totalPages={totalProgressPages}
+              onPageChange={setProgressPage}
+            />
+          )}
         </div>
       </div>
+
+      {/* MODALE ANNULATION */}
+      <ConfirmArchiveDialog
+        open={isArchiveDialogOpen}
+        onOpenChange={setIsArchiveDialogOpen}
+        onConfirm={handleArchive}
+        ticketNumber={ticketToArchive?.ticketNumber}
+      />
 
       {/* MODALE RESOLUTION */}
       <Dialog open={isResolveDialogOpen} onOpenChange={setIsResolveDialogOpen}>
@@ -465,6 +534,116 @@ function TicketCard({ ticket, type, onAssign, onArchive, onResolve }) {
         )}
       </CardFooter>
     </Card>
+  );
+}
+
+// --- PAGINATION COMPONENT ---
+function Pagination({ currentPage, totalPages, onPageChange }) {
+  return (
+    <div className="flex flex-col items-center gap-3 mt-4">
+      {/* Page info */}
+      <div className="text-xs text-slate-600 font-medium">
+        Page <span className="text-indigo-600 font-bold">{currentPage}</span> / <span className="text-indigo-600 font-bold">{totalPages}</span>
+      </div>
+      
+      {/* Pagination controls */}
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="group relative flex items-center justify-center w-7 h-7 rounded-lg border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-200 transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
+        >
+          <ChevronLeft className="w-3 h-3 text-slate-600 group-hover:text-indigo-600 transition-colors" />
+        </button>
+        
+        {(() => {
+          const pages = [];
+          const showPages = 3;
+          
+          let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+          let endPage = Math.min(totalPages, startPage + showPages - 1);
+          
+          if (endPage - startPage < showPages - 1) {
+            startPage = Math.max(1, endPage - showPages + 1);
+          }
+          
+          // First page + ellipsis
+          if (startPage > 1) {
+            pages.push(
+              <button
+                key={1}
+                onClick={() => onPageChange(1)}
+                className={`relative flex items-center justify-center min-w-[28px] h-7 px-2 rounded-lg border font-semibold text-xs transition-all duration-200 hover:scale-105 ${
+                  1 === currentPage
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-md'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600'
+                }`}
+              >
+                1
+              </button>
+            );
+            if (startPage > 2) {
+              pages.push(
+                <span key="ellipsis1" className="flex items-center justify-center w-6 text-slate-400 font-bold text-xs">
+                  ...
+                </span>
+              );
+            }
+          }
+          
+          // Page buttons
+          for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+              <button
+                key={i}
+                onClick={() => onPageChange(i)}
+                className={`relative flex items-center justify-center min-w-[28px] h-7 px-2 rounded-lg border font-semibold text-xs transition-all duration-200 hover:scale-105 ${
+                  i === currentPage
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-md'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600'
+                }`}
+              >
+                {i}
+              </button>
+            );
+          }
+          
+          // Ellipsis + last page
+          if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+              pages.push(
+                <span key="ellipsis2" className="flex items-center justify-center w-6 text-slate-400 font-bold text-xs">
+                  ...
+                </span>
+              );
+            }
+            pages.push(
+              <button
+                key={totalPages}
+                onClick={() => onPageChange(totalPages)}
+                className={`relative flex items-center justify-center min-w-[28px] h-7 px-2 rounded-lg border font-semibold text-xs transition-all duration-200 hover:scale-105 ${
+                  totalPages === currentPage
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-md'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600'
+                }`}
+              >
+                {totalPages}
+              </button>
+            );
+          }
+          
+          return pages;
+        })()}
+        
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="group relative flex items-center justify-center w-7 h-7 rounded-lg border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-200 transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
+        >
+          <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-indigo-600 transition-colors" />
+        </button>
+      </div>
+    </div>
   );
 }
 

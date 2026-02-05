@@ -1,5 +1,6 @@
 package com.it_incidents_backend.dto.auth;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -20,6 +21,7 @@ public class SignupRequest {
      * - No spaces allowed
      * - Must start with a letter
      */
+    @Schema(example = "john_doe")
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
     @Pattern(
@@ -28,6 +30,7 @@ public class SignupRequest {
     )
     private String username;
 
+    @Schema(example = "user@example.com")
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
     @Size(max = 100, message = "Email must not exceed 100 characters")
@@ -42,10 +45,12 @@ public class SignupRequest {
      * - At least 1 digit
      * - At least 1 special character (@$!%*?&)
      */
+    @Schema(example = "StrongPass@123")
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
     private String password;
 
+    @Schema(example = "John")
     @NotBlank(message = "First name is required")
     @Size(min = 1, max = 50, message = "First name must be between 1 and 50 characters")
     @Pattern(
@@ -54,6 +59,7 @@ public class SignupRequest {
     )
     private String firstName;
 
+    @Schema(example = "Doe")
     @NotBlank(message = "Last name is required")
     @Size(min = 1, max = 50, message = "Last name must be between 1 and 50 characters")
     @Pattern(
@@ -65,6 +71,7 @@ public class SignupRequest {
     /**
      * Phone number
      */
+    @Schema(example = "+1 202 555 0143")
     @Pattern(
             regexp = "^(\\+\\d{1,3}[- ]?)?\\(?\\d{1,4}\\)?[- ]?\\d{1,4}[- ]?\\d{1,9}$",
             message = "Phone number format is invalid"

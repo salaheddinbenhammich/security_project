@@ -4,7 +4,7 @@ import com.it_incidents_backend.dto.comment.CommentResponse;
 import com.it_incidents_backend.dto.comment.CreateCommentRequest;
 import com.it_incidents_backend.dto.comment.UpdateCommentRequest;
 import com.it_incidents_backend.entities.Role;
-import com.it_incidents_backend.service.CommentService;
+import com.it_incidents_backend.services.CommentService;
 import com.it_incidents_backend.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

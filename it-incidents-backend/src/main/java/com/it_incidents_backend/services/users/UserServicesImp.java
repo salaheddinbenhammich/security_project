@@ -34,7 +34,7 @@ import com.it_incidents_backend.util.SecurityUtils;
 
 @Service
 public class UserServicesImp implements UserServices {
-    
+
     // ========== SECURITY: PASSWORD POLICY CONFIGURATION ==========
     /**
      * Password policy regex pattern
@@ -44,7 +44,7 @@ public class UserServicesImp implements UserServices {
      * - At least 1 lowercase letter (a-z)
      * - At least 1 digit (0-9)
      * - At least 1 special character (@$!%*?&)
-     * 
+     * <p>
      * This prevents weak passwords like "password", "123456", "admin123"
      */
     private static final Pattern PASSWORD_PATTERN = Pattern.compile(
@@ -52,7 +52,7 @@ public class UserServicesImp implements UserServices {
     );
 
     // ========== DEPENDENCIES ==========
-    
+
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
@@ -92,6 +92,13 @@ public class UserServicesImp implements UserServices {
      */
     @Override
     public UserDetailResponse getUserById(UUID id) {
+
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+
+        if (!currentUserId.equals(id) && !SecurityUtils.isAdmin()) {
+            throw new AppException("You can only view your own profile", HttpStatus.FORBIDDEN);
+        }
+
         User user = this.userRepository.findById(id)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         return this.userMapper.toDetailDto(user);
@@ -101,7 +108,7 @@ public class UserServicesImp implements UserServices {
 
     /**
      * Create new user (ADMIN only)
-     * SECURITY: 
+     * SECURITY:
      * - Validates username and email uniqueness
      * - Enforces password policy
      * - Hashes password with BCrypt
@@ -114,40 +121,42 @@ public class UserServicesImp implements UserServices {
         if (this.userRepository.existsByUsername(createUserRequest.username())) {
             throw new AppException("Username already taken", HttpStatus.BAD_REQUEST);
         }
-        
+
         // ========== VALIDATION: CHECK DUPLICATE EMAIL ==========
         if (this.userRepository.existsByEmail(createUserRequest.email())) {
             throw new AppException("Email already in use", HttpStatus.BAD_REQUEST);
         }
-        
+
         // ========== SECURITY: VALIDATE PASSWORD STRENGTH ==========
         if (!PASSWORD_PATTERN.matcher(createUserRequest.password()).matches()) {
             throw new AppException(
                     "Password must be at least 8 characters long and contain: " +
-                    "1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special character (@$!%*?&)",
+                            "1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special character (@$!%*?&)",
                     HttpStatus.BAD_REQUEST
             );
         }
-        
+
         // ========== CREATE USER ENTITY ==========
         User user = this.userMapper.toEntity(createUserRequest);
-        
+
         // ========== SECURITY: HASH PASSWORD WITH BCRYPT ==========
         // BCrypt automatically generates a salt and hashes the password
         // The strength (12) is configured in SecurityConfig
         user.setPassword(passwordEncoder.encode(createUserRequest.password()));
-        
+
         // ========== SECURITY: SET SECURE ACCOUNT DEFAULTS ==========
-        user.setCredentialsNonExpired(true);   // Credentials don't expire
+        // Credential expiration is calculated dynamically in User.isCredentialsNonExpired()
+        // based on passwordChangedAt + 90 days
         user.setEnabled(true);                  // Account is active
         user.setAccountNonLocked(true);         // Account is not locked
+        user.setIsApproved(true);               // Admin-created users are auto-approved
         user.setDeleted(false);                 // Not soft-deleted
         user.setFailedLoginAttempts(0);         // No failed login attempts
-        user.setPasswordChangedAt(LocalDateTime.now()); // Track password creation date
-        
+        user.setPasswordChangedAt(LocalDateTime.now()); // Track password creation date (CRITICAL for expiration calculation!)
+
         // ========== SAVE USER ==========
         user = this.userRepository.save(user);
-        
+
         return this.userMapper.toResponseDto(user);
     }
 
@@ -160,31 +169,39 @@ public class UserServicesImp implements UserServices {
      * - Enforces password policy on new password
      * - Prevents password reuse
      * - Resets failed login attempts on successful change
-     * - Tracks password change timestamp
+     * - Updates passwordChangedAt to reset 90-day expiration timer
      */
     @Override
     @Transactional
     public void updatePassword(UUID id, PasswordChangeRequest passwordChangeRequest) {
+
+        // ===== SECURITY CHECK =====
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+
+        if (!currentUserId.equals(id) && !SecurityUtils.isAdmin()) {
+            throw new AppException("You can only change your own password", HttpStatus.FORBIDDEN);
+        }
+
         // ========== FIND USER ==========
         User user = this.userRepository.findById(id)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-        
+
         // ========== SECURITY: VERIFY CURRENT PASSWORD ==========
         // This prevents unauthorized password changes
         // Even if someone steals a JWT token, they can't change the password without knowing it
         if (!passwordEncoder.matches(passwordChangeRequest.currentPassword(), user.getPassword())) {
             throw new AppException("Current password is incorrect", HttpStatus.BAD_REQUEST);
         }
-        
+
         // ========== SECURITY: VALIDATE NEW PASSWORD STRENGTH ==========
         if (!PASSWORD_PATTERN.matcher(passwordChangeRequest.newPassword()).matches()) {
             throw new AppException(
                     "Password must be at least 8 characters long and contain: " +
-                    "1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special character (@$!%*?&)",
+                            "1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special character (@$!%*?&)",
                     HttpStatus.BAD_REQUEST
             );
         }
-        
+
         // ========== SECURITY: PREVENT PASSWORD REUSE ==========
         // User cannot use the same password they currently have
         if (passwordEncoder.matches(passwordChangeRequest.newPassword(), user.getPassword())) {
@@ -193,16 +210,20 @@ public class UserServicesImp implements UserServices {
                     HttpStatus.BAD_REQUEST
             );
         }
-        
+
         // ========== UPDATE PASSWORD ==========
         user.setPassword(passwordEncoder.encode(passwordChangeRequest.newPassword()));
+
+        // ========== CRITICAL: RESET PASSWORD EXPIRATION TIMER ==========
+        // This resets the 90-day countdown by updating passwordChangedAt to NOW
+        // Without this, changing the password wouldn't extend the expiration!
         user.setPasswordChangedAt(LocalDateTime.now());
-        
+
         // ========== SECURITY: RESET FAILED LOGIN ATTEMPTS ==========
         // After successful password change, reset any failed login attempts
         // This helps users who were locked out and changed their password
         user.resetFailedLoginAttempts();
-        
+
         this.userRepository.save(user);
     }
 
@@ -221,29 +242,29 @@ public class UserServicesImp implements UserServices {
         // ========== FIND USER ==========
         User user = this.userRepository.findById(id)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-        
+
         // ========== VALIDATION: CHECK USERNAME UNIQUENESS ==========
-        if (updateUserRequest.username() != null && 
-            !updateUserRequest.username().equals(user.getUsername())) {
+        if (updateUserRequest.username() != null &&
+                !updateUserRequest.username().equals(user.getUsername())) {
             if (this.userRepository.existsByUsername(updateUserRequest.username())) {
                 throw new AppException("Username already taken", HttpStatus.BAD_REQUEST);
             }
             user.setUsername(updateUserRequest.username());
         }
-        
+
         // ========== VALIDATION: CHECK EMAIL UNIQUENESS ==========
-        if (updateUserRequest.email() != null && 
-            !updateUserRequest.email().equals(user.getEmail())) {
+        if (updateUserRequest.email() != null &&
+                !updateUserRequest.email().equals(user.getEmail())) {
             if (this.userRepository.existsByEmail(updateUserRequest.email())) {
                 throw new AppException("Email already in use", HttpStatus.BAD_REQUEST);
             }
             user.setEmail(updateUserRequest.email());
         }
-        
+
         // ========== UPDATE USER FIELDS ==========
         // MapStruct will only update non-null fields
         user = this.userMapper.partialUpdate(updateUserRequest, user);
-        
+
         this.userRepository.save(user);
     }
 
@@ -256,34 +277,33 @@ public class UserServicesImp implements UserServices {
      */
     @Override
     @Transactional
-    public void updateUser(UUID id, UserSelfUpdateRequest userSelfUpdateRequest) {
-        // ========== FIND USER ==========
-        User user = this.userRepository.findById(id)
+    public void updateCurrentUser(UserSelfUpdateRequest request) {
+
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+
+        User user = this.userRepository.findById(currentUserId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-        
-        // ========== VALIDATION: CHECK USERNAME UNIQUENESS ==========
-        if (userSelfUpdateRequest.username() != null && 
-            !userSelfUpdateRequest.username().equals(user.getUsername())) {
-            if (this.userRepository.existsByUsername(userSelfUpdateRequest.username())) {
+
+        // username uniqueness
+        if (request.username() != null &&
+                !request.username().equals(user.getUsername())) {
+
+            if (this.userRepository.existsByUsername(request.username())) {
                 throw new AppException("Username already taken", HttpStatus.BAD_REQUEST);
             }
-            user.setUsername(userSelfUpdateRequest.username());
         }
-        
-        // ========== VALIDATION: CHECK EMAIL UNIQUENESS ==========
-        if (userSelfUpdateRequest.email() != null && 
-            !userSelfUpdateRequest.email().equals(user.getEmail())) {
-            if (this.userRepository.existsByEmail(userSelfUpdateRequest.email())) {
+
+        // email uniqueness
+        if (request.email() != null &&
+                !request.email().equals(user.getEmail())) {
+
+            if (this.userRepository.existsByEmail(request.email())) {
                 throw new AppException("Email already in use", HttpStatus.BAD_REQUEST);
             }
-            user.setEmail(userSelfUpdateRequest.email());
         }
-        
-        // ========== UPDATE USER FIELDS ==========
-        // Only allows updating: username, email, firstName, lastName, phoneNumber
-        // Cannot update: role, enabled, locked status (security limitation)
-        user = this.userMapper.partialUpdate(userSelfUpdateRequest, user);
-        
+
+        user = this.userMapper.partialUpdate(request, user);
+
         this.userRepository.save(user);
     }
 
@@ -291,9 +311,10 @@ public class UserServicesImp implements UserServices {
 
     /**
      * Delete user (ADMIN only)
-     * SECURITY: 
-     * - Hard delete (can be changed to soft delete if needed)
-     * - All user's tickets will be cascaded based on JPA configuration
+     * SECURITY:
+     * - Soft delete (preserves data for audit)
+     * - Tracks who performed the deletion
+     * - Disables account to prevent login
      */
     @Override
     @Transactional
@@ -324,11 +345,11 @@ public class UserServicesImp implements UserServices {
     public void enableUser(UUID id) {
         User user = this.userRepository.findById(id)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-        
+
         // ========== ENABLE ACCOUNT ==========
         user.setEnabled(true);          // Enable login
         user.setDeleted(false);         // Unmark as deleted
-        
+
         this.userRepository.save(user);
     }
 
@@ -344,10 +365,10 @@ public class UserServicesImp implements UserServices {
     public void disableUser(UUID id) {
         User user = this.userRepository.findById(id)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-        
+
         // ========== DISABLE ACCOUNT ==========
         user.setEnabled(false);         // Prevent login
-        
+
         this.userRepository.save(user);
     }
 
@@ -364,15 +385,15 @@ public class UserServicesImp implements UserServices {
     public void unlockUser(UUID id) {
         User user = this.userRepository.findById(id)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-        
+
         // ========== UNLOCK ACCOUNT ==========
         // This method is defined in User entity
         // It sets: failedLoginAttempts = 0, lockedUntil = null
         user.resetFailedLoginAttempts();
-        
+
         // Remove permanent lock
         user.setAccountNonLocked(true);
-        
+
         this.userRepository.save(user);
     }
 
@@ -382,17 +403,25 @@ public class UserServicesImp implements UserServices {
      * Get all tickets created by a user
      * SECURITY:
      * - ADMIN can view any user's tickets
+     * - Users can only view their own tickets
      * - Returns DTO instead of entity to prevent circular references
      */
     @Override
     public List<TicketResponse> getUserTickets(UUID userId) {
+
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+
+        if (!currentUserId.equals(userId) && !SecurityUtils.isAdmin()) {
+            throw new AppException("You can only view your own tickets", HttpStatus.FORBIDDEN);
+        }
+
         // ========== FIND USER ==========
         User user = this.userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-        
+
         // ========== GET USER'S TICKETS ==========
         List<Ticket> tickets = ticketRepository.findByCreatedByOrderByCreatedAtDesc(user);
-        
+
         // ========== CONVERT TO DTO ==========
         // This prevents circular reference serialization issues
         // Ticket -> User -> Tickets -> User (infinite loop)
@@ -400,6 +429,27 @@ public class UserServicesImp implements UserServices {
         return tickets.stream()
                 .map(ticketMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    // ========== ACCOUNT APPROVAL METHOD ==========
+
+    /**
+     * Approve user account (ADMIN only)
+     * SECURITY:
+     * - Changes isApproved from false to true
+     * - Allows user to create tickets after approval
+     * - Only accessible by admin
+     */
+    @Override
+    @Transactional
+    public void approveUser(UUID id) {
+        User user = this.userRepository.findById(id)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        // ========== APPROVE ACCOUNT ==========
+        user.setIsApproved(true);  // Approve the account
+
+        this.userRepository.save(user);
     }
 
     // ========== HELPER METHODS ==========

@@ -17,12 +17,12 @@ import {
   Mail,
   Phone,
   Lock,
-  AlertCircle,
   ChevronLeft,
   ChevronRight,
   UserCheck,
   UserMinus,
-  Unlock
+  Unlock,
+  Clock
 } from "lucide-react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -35,8 +35,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UserEditDialog } from "@/components/UserModals/UserModals";
 import ConfirmDeleteDialog from "@/components/UserModals/ConfirmDeleteDialog";
+import PasswordStrength from "@/components/PasswordStrength";
 
 import { toast } from "sonner";
+import { validatePassword } from "@/utils/auth";
 
 export default function AdminUsers() {
   const navigate = useNavigate();
@@ -57,6 +59,7 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswordStrength, setShowPasswordStrength] = useState(false);
   const [newUser, setNewUser] = useState({ 
     username: "", email: "", password: "", confirmPassword: "", firstName: "", lastName:"", phoneNumber:"", role: "USER" 
   });
@@ -77,7 +80,8 @@ export default function AdminUsers() {
     ACTIVE: { label: "Actif", color: "bg-green-100 text-green-700 border-green-200", icon: UserCheck },
     DISABLED: { label: "Désactivé", color: "bg-red-100 text-red-700 border-red-200", icon: UserMinus },
     LOCKED: { label: "Verrouillé", color: "bg-orange-100 text-orange-700 border-orange-200", icon: Lock },
-    DELETED: { label: "Supprimé", color: "bg-rose-100 text-rose-700 border-rose-200", icon: Trash2 }
+    DELETED: { label: "Supprimé", color: "bg-rose-100 text-rose-700 border-rose-200", icon: Trash2 },
+    PENDING_APPROVAL: { label: "En attente", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Clock}
   };
 
   const currentRoleStyle = roleStyles[roleFilter] || roleStyles.ALL;
@@ -90,7 +94,7 @@ export default function AdminUsers() {
     try {
       const res = await api.get('/users');
       const baseUsers = res.data.content || res.data || [];
-      console.log("Fetched users:", baseUsers); // Debug log
+      console.log("Fetched users:", baseUsers);
       setUsers(baseUsers);
     } catch (e) {
       console.error("Erreur users", e);
@@ -115,15 +119,16 @@ export default function AdminUsers() {
 
     let matchesStatus = true;
     if (statusFilter === "ACTIVE") {
-      // Check if enabled is explicitly true and accountNonLocked is not false
-      matchesStatus = (user.enabled === true || user.enabled === undefined) && 
-                     (user.accountNonLocked === true || user.accountNonLocked === undefined);
+      matchesStatus = user.enabled === true && 
+                     !user.isCurrentlyLocked && 
+                     user.accountNonLocked !== false &&
+                     user.deleted !== true;
     } else if (statusFilter === "DISABLED") {
       matchesStatus = user.enabled === false;
     } else if (statusFilter === "LOCKED") {
+      matchesStatus = user.isCurrentlyLocked === true || user.accountNonLocked === false;
     } else if (statusFilter === "DELETED") {
       matchesStatus = user.deleted === true;
-      matchesStatus = user.accountNonLocked === false;
     }
 
     return matchesSearch && matchesRole && matchesStatus;
@@ -149,8 +154,10 @@ export default function AdminUsers() {
       return;
     }
 
-    if (newUser.password.length < 6) {
-      toast.error("Le mot de passe doit contenir au moins 6 caractères");
+    // Use password validation utility
+    const passwordValidation = validatePassword(newUser.password);
+    if (!passwordValidation.isValid) {
+      toast.error("Le mot de passe ne respecte pas les critères de sécurité requis");
       return;
     }
 
@@ -160,6 +167,7 @@ export default function AdminUsers() {
       setNewUser({ username: "", email: "", password: "", confirmPassword: "", firstName: "", lastName:"", phoneNumber:"", role: "USER" });
       setShowPassword(false);
       setShowConfirmPassword(false);
+      setShowPasswordStrength(false);
       fetchUsers();
       toast.success("Utilisateur créé avec succès");
     } catch (err) {
@@ -193,14 +201,25 @@ export default function AdminUsers() {
       setUsers(users.filter(u => u.id !== userToDelete.id));
       setIsDeleteOpen(false);
       setUserToDelete(null);
-      fetchUsers(); // refetch from server to get updated data
-    toast.success("Utilisateur supprimé avec succès");
+      fetchUsers();
+      toast.success("Utilisateur supprimé avec succès");
     } catch (err) {
       toast.error(err.response?.data?.message || "Impossible de supprimer l'utilisateur");
     }
   };
 
   // --- NEW ACCOUNT MANAGEMENT ACTIONS ---
+
+  const handleApproveUser = async (userId) => {
+    try {
+      await api.put(`/users/${userId}/approve`);
+      fetchUsers();
+      toast.success("Compte approuvé avec succès");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Erreur lors de l'approbation");
+    }
+  };
+
   const handleEnableUser = async (userId) => {
     try {
       await api.put(`/users/${userId}/enable`);
@@ -246,20 +265,17 @@ export default function AdminUsers() {
 
   // Helper function to get user status
   const getUserStatus = (user) => {
-    // Handle cases where fields might be undefined
-    const isLocked = user.accountNonLocked === false;
-    const isDisabled = user.enabled === false;
-    
-    if (isLocked) return "LOCKED";
-    if (isDisabled) return "DISABLED";
+    if (user.deleted === true) return "DELETED";
+    if (!user.isApproved) return "PENDING_APPROVAL";
+    if (user.isCurrentlyLocked === true || user.accountNonLocked === false) return "LOCKED";
+    if (user.enabled === false) return "DISABLED";
     return "ACTIVE";
   };
 
   const getUserStatusBadge = (user) => {
     const status = getUserStatus(user);
     
-    
-    if (user.deleted === true) {
+    if (status === "DELETED") {
       return (
         <Badge variant="outline" className="font-semibold text-rose-700 bg-rose-100 border-rose-200">
           <Trash2 className="w-3 h-3 mr-1" />
@@ -517,6 +533,8 @@ export default function AdminUsers() {
                           type={showPassword ? "text" : "password"}
                           value={newUser.password} 
                           onChange={e => setNewUser({...newUser, password: e.target.value})} 
+                          onFocus={() => setShowPasswordStrength(true)}
+                          onBlur={() => setShowPasswordStrength(false)}
                           placeholder="••••••••"
                           className="h-10 text-sm pr-9 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                           required 
@@ -528,6 +546,21 @@ export default function AdminUsers() {
                         >
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
+
+                        {/* Password Strength Popover - Comic Bubble Style */}
+                        {showPasswordStrength && newUser.password && (
+                          <div className="absolute z-50 left-0 -top-2 -translate-y-full w-[280px] animate-in fade-in zoom-in-95 duration-200">
+                            <div className="relative p-4 bg-white border-2 border-indigo-300 rounded-xl shadow-xl">
+                              {/* Comic-style tail pointing down */}
+                              <div className="absolute left-8 -bottom-3 w-6 h-6">
+                                <div className="w-4 h-4 bg-white border-r-2 border-b-2 border-indigo-300 rotate-45 transform origin-center"></div>
+                              </div>
+                              
+                              {/* Password strength content */}
+                              <PasswordStrength password={newUser.password} />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -556,12 +589,6 @@ export default function AdminUsers() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Password hint */}
-                  <p className="flex items-center gap-1 -mt-2 text-xs text-slate-500">
-                    <AlertCircle className="w-3 h-3" />
-                    Le mot de passe doit contenir au moins 6 caractères
-                  </p>
 
                   {/* Phone & Role */}
                   <div className="grid grid-cols-2 gap-3">
@@ -616,6 +643,7 @@ export default function AdminUsers() {
                         setNewUser({ username: "", email: "", password: "", confirmPassword: "", firstName: "", lastName:"", phoneNumber:"", role: "USER" });
                         setShowPassword(false);
                         setShowConfirmPassword(false);
+                        setShowPasswordStrength(false);
                       }}
                       className="flex-1 h-10 text-sm border-slate-200 hover:bg-slate-50"
                     >
@@ -766,6 +794,19 @@ export default function AdminUsers() {
                             <Eye className="w-4 h-4" />
                           </Button>
 
+                          {/* Approve button - show only for pending approval users */}
+                          {!u.isApproved && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleApproveUser(u.id)} 
+                              className="text-green-600 rounded-lg hover:text-green-700 hover:bg-green-50 h-9 w-9"
+                              title="Approuver le compte"
+                            >
+                              <UserCheck className="w-4 h-4" />
+                            </Button>
+                          )}
+
                           {/* Enable/Disable Toggle */}
                           {u.enabled === false ? (
                             <Button 
@@ -790,7 +831,7 @@ export default function AdminUsers() {
                           )}
 
                           {/* Unlock if locked */}
-                          {u.accountNonLocked === false && (
+                          {(u.isCurrentlyLocked === true || u.accountNonLocked === false) && (
                             <Button 
                               variant="ghost" 
                               size="icon" 
@@ -834,7 +875,7 @@ export default function AdminUsers() {
         </CardContent>
       </Card>
 
-      {/* Pagination - Same as before */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex flex-col items-center gap-6 mt-8">
           <div className="text-sm font-medium text-slate-600">
@@ -850,8 +891,6 @@ export default function AdminUsers() {
             >
               <ChevronLeft className="w-4 h-4 transition-colors text-slate-600 group-hover:text-indigo-600" />
             </button>
-            
-            {/* Page numbers logic here - keep as before */}
             
             <button
               onClick={() => setCurrentPage(currentPage + 1)}

@@ -23,6 +23,7 @@ public record UserCreateRequest(
         @NotBlank
         String phoneNumber,
         @NotNull
-        Role role
+        Role role,
+        Boolean isApproved
     ) implements Serializable {
 }

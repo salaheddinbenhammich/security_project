@@ -1,7 +1,6 @@
-package com.it_incidents_backend.service;
+package com.it_incidents_backend.services;
 
 import com.it_incidents_backend.dto.comment.CommentResponse;
-import com.it_incidents_backend.dto.comment.CreateCommentRequest;
 import com.it_incidents_backend.dto.ticket.*;
 import com.it_incidents_backend.entities.*;
 import com.it_incidents_backend.exceptions.AppException;

@@ -57,6 +57,10 @@ public class User implements UserDetails {
     @Builder.Default
     private Boolean enabled = true;
 
+    @Column(name = "is_approved", nullable = false)
+    @Builder.Default
+    private Boolean isApproved = false;
+
 //    @Column(nullable = false)
 //    @Builder.Default
 //    private Boolean accountNonExpired = true;
@@ -65,9 +69,9 @@ public class User implements UserDetails {
     @Builder.Default
     private Boolean accountNonLocked = true;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean credentialsNonExpired = true;
+//    @Column(nullable = false)
+//    @Builder.Default
+//    private Boolean credentialsNonExpired = true;
 
     // Soft delete
     @Column(name = "deleted", nullable = false)
@@ -114,6 +118,7 @@ public class User implements UserDetails {
     private void onCreate() {
         this.enabled = true;
         this.accountNonLocked = true;
+        this.isApproved = false;
         this.createdAt = LocalDateTime.now();
         this.passwordChangedAt = LocalDateTime.now();
         this.lastLogin = LocalDateTime.now();
@@ -158,7 +163,24 @@ public class User implements UserDetails {
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return credentialsNonExpired;
+        if (passwordChangedAt == null) {
+            return true; // First login or legacy accounts
+        }
+
+        // Password expires after 90 days
+        LocalDateTime expirationDate = passwordChangedAt.plusDays(90);
+        return LocalDateTime.now().isBefore(expirationDate);
+    }
+
+    // helper method:
+    public boolean isPasswordExpired() {
+        return !isCredentialsNonExpired();
+    }
+
+    public long getDaysUntilPasswordExpires() {
+        if (passwordChangedAt == null) return 90;
+        LocalDateTime expirationDate = passwordChangedAt.plusDays(90);
+        return java.time.temporal.ChronoUnit.DAYS.between(LocalDateTime.now(), expirationDate);
     }
 
     @Override

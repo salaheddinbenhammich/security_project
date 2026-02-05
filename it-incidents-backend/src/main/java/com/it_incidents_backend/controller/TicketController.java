@@ -4,7 +4,9 @@ import com.it_incidents_backend.dto.ticket.*;
 import com.it_incidents_backend.entities.Priority;
 import com.it_incidents_backend.entities.Role;
 import com.it_incidents_backend.entities.TicketStatus;
-import com.it_incidents_backend.service.TicketService;
+import com.it_incidents_backend.entities.User;
+import com.it_incidents_backend.exceptions.AppException;
+import com.it_incidents_backend.services.TicketService;
 import com.it_incidents_backend.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,6 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.it_incidents_backend.repository.UserRepository;
+
 
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +39,7 @@ import java.util.UUID;
 public class TicketController {
 
     private final TicketService ticketService;
+    private final UserRepository userRepository;
 
     /**
      * Create a new ticket (Authenticated users only)
@@ -61,6 +66,19 @@ public class TicketController {
             Authentication authentication
     ) {
         UUID userId = SecurityUtils.getUserId(authentication);
+
+        // ========== CRITICAL: CHECK IF USER IS APPROVED ==========
+        // This is your main security check - users cannot create tickets until approved
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        if (!user.getIsApproved()) {
+            throw new AppException(
+                    "Votre compte est en attente d'approbation par un administrateur. Vous ne pouvez pas créer de tickets pour le moment.",
+                    HttpStatus.FORBIDDEN
+            );
+        }
+
         TicketResponse ticket = ticketService.createTicket(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ticket);
     }

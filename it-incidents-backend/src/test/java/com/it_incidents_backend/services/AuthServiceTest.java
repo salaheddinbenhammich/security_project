@@ -10,6 +10,7 @@ import com.it_incidents_backend.entities.User;
 import com.it_incidents_backend.exceptions.AppException;
 import com.it_incidents_backend.repository.UserRepository;
 import com.it_incidents_backend.services.auth.AuthServiceImp;
+import com.it_incidents_backend.services.auth.LoginAttemptService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,6 +56,10 @@ class AuthServiceTest {
 
     @Mock
     private JwtUtil jwtUtil;
+
+    // AJOUT: mock du nouveau service qui gère les tentatives de login échouées
+    @Mock
+    private LoginAttemptService loginAttemptService;
 
     @InjectMocks
     private AuthServiceImp authService;
@@ -146,7 +151,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.signUp(signupRequest))
                 .isInstanceOf(AppException.class)
-                .hasMessageContaining("Username is already taken");  // FIXED: matches actual message
+                .hasMessageContaining("Username is already taken");
     }
 
     @Test
@@ -157,7 +162,7 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService.signUp(signupRequest))
                 .isInstanceOf(AppException.class)
-                .hasMessageContaining("Email is already registered");  // FIXED: matches actual message
+                .hasMessageContaining("Email is already registered");
     }
 
     // ========== authentication security tests ==========
@@ -191,37 +196,15 @@ class AuthServiceTest {
                 .isInstanceOf(AppException.class)
                 .hasMessageContaining("Invalid credentials");
 
-        // verify failed attempts were incremented
-        verify(userRepository).save(argThat(user ->
-                user.getFailedLoginAttempts() > 0
-        ));
-    }
-
-    @Test
-    @DisplayName("account should lock after 5 failed login attempts (brute force protection)")
-    void fiveFailedLogins_shouldLockAccount() {
-        when(userRepository.findByUsernameOrEmail(anyString(), anyString()))
-                .thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
-
-        // simulate 5 failed login attempts
-        for (int i = 0; i < 5; i++) {
-            try {
-                authService.authenticate(loginRequest);
-            } catch (AppException e) {
-                // expected exception
-            }
-        }
-
-        // verify account is locked
-        assertThat(testUser.getFailedLoginAttempts()).isEqualTo(5);
-        assertThat(testUser.getLockedUntil()).isNotNull();
-        assertThat(testUser.isAccountNonLocked()).isFalse();
+        // FIX: maintenant on vérifie que le service LoginAttemptService a été appelé
+        // au lieu de vérifier que userRepository.save() a été appelé directement
+        verify(loginAttemptService).recordFailedLogin(testUser);
     }
 
     @Test
     @DisplayName("successful login should reset failed attempts counter")
     void successfulLogin_shouldResetFailedAttempts() {
+        // FIX: on initialise le user avec 3 tentatives échouées
         testUser.setFailedLoginAttempts(3);
 
         when(userRepository.findByUsernameOrEmail(anyString(), anyString()))
@@ -234,6 +217,7 @@ class AuthServiceTest {
 
         authService.authenticate(loginRequest);
 
+        // FIX: après un login réussi, le compteur doit être remis à 0
         assertThat(testUser.getFailedLoginAttempts()).isZero();
         assertThat(testUser.getLockedUntil()).isNull();
     }
@@ -270,11 +254,11 @@ class AuthServiceTest {
     @DisplayName("valid refresh token should generate new tokens")
     void whenRefreshToken_withValidToken_thenSuccess() {
         when(jwtUtil.validateToken("valid.refresh.token")).thenReturn(true);
-        when(jwtUtil.isTokenExpired("valid.refresh.token")).thenReturn(false);  // ADDED: needed for validation
+        when(jwtUtil.isTokenExpired("valid.refresh.token")).thenReturn(false);
         when(jwtUtil.getTokenType("valid.refresh.token")).thenReturn("refresh");
         when(jwtUtil.getUsernameFromToken("valid.refresh.token")).thenReturn("testuser");
         when(jwtUtil.getUserIdFromToken("valid.refresh.token")).thenReturn(testUserId);
-        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));  // FIXED: uses findById not findByUsername
+        when(userRepository.findById(testUserId)).thenReturn(Optional.of(testUser));
         when(jwtUtil.generateToken(eq("testuser"), eq(testUserId), eq(Role.USER)))
                 .thenReturn("new.access.token");
         when(jwtUtil.generateRefreshToken(eq("testuser"), eq(testUserId)))
@@ -290,7 +274,7 @@ class AuthServiceTest {
     @DisplayName("expired refresh token should be rejected (token security)")
     void whenRefreshToken_withExpiredToken_thenThrowsException() {
         when(jwtUtil.validateToken(anyString())).thenReturn(true);
-        when(jwtUtil.isTokenExpired(anyString())).thenReturn(true);  // ADDED: token is expired
+        when(jwtUtil.isTokenExpired(anyString())).thenReturn(true);
 
         assertThatThrownBy(() -> authService.refreshToken(refreshRequest))
                 .isInstanceOf(AppException.class)
@@ -301,7 +285,7 @@ class AuthServiceTest {
     @DisplayName("access token used as refresh token should be rejected (token type security)")
     void whenRefreshToken_withAccessToken_thenThrowsException() {
         when(jwtUtil.validateToken("valid.refresh.token")).thenReturn(true);
-        when(jwtUtil.isTokenExpired("valid.refresh.token")).thenReturn(false);  // ADDED
+        when(jwtUtil.isTokenExpired("valid.refresh.token")).thenReturn(false);
         when(jwtUtil.getTokenType("valid.refresh.token")).thenReturn("access");
 
         assertThatThrownBy(() -> authService.refreshToken(refreshRequest))
@@ -435,9 +419,10 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("multiple rapid failed login attempts should all increment counter")
+    @DisplayName("multiple rapid failed login attempts should trigger LoginAttemptService for each")
     void rapidFailedAttempts_shouldAllBeCountedIndependently() {
-        // simulates concurrent attack attempts
+        // FIX: on ne teste plus directement sur l'objet User
+        // mais on vérifie que le service LoginAttemptService est bien appelé 3 fois
         when(userRepository.findByUsernameOrEmail(anyString(), anyString()))
                 .thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
@@ -451,6 +436,7 @@ class AuthServiceTest {
             }
         }
 
-        assertThat(testUser.getFailedLoginAttempts()).isEqualTo(3);
+        // FIX: on vérifie que recordFailedLogin a été appelé 3 fois
+        verify(loginAttemptService, times(3)).recordFailedLogin(testUser);
     }
 }

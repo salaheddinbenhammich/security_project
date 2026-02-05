@@ -17,6 +17,7 @@ public record UserUpdateRequest(
         Role role,
         Boolean enabled,
         Boolean accountNonLocked,
+        Boolean isApproved,
         Boolean credentialsNonExpired,
         Integer failedLoginAttempts,
         LocalDateTime lockedUntil

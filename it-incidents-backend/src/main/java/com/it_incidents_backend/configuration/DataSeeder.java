@@ -57,7 +57,7 @@ public class DataSeeder implements CommandLineRunner {
                 TicketStatus.IN_PROGRESS,Priority.HIGH,Category.HARDWARE,2);
 
         createTicket(alice,"INC-ALI-02","Mise à jour Adobe échouée",
-                "Impossible d’ouvrir les PDF.",
+                "Impossible d'ouvrir les PDF.",
                 TicketStatus.IN_PROGRESS,Priority.MEDIUM,Category.SOFTWARE,5);
     }
 
@@ -98,7 +98,7 @@ public class DataSeeder implements CommandLineRunner {
                 .role(role)
                 .enabled(true)
                 .accountNonLocked(true)
-                .credentialsNonExpired(true)
+                .isApproved(true)
                 .deleted(false)
                 .failedLoginAttempts(0)
                 .passwordChangedAt(LocalDateTime.now())

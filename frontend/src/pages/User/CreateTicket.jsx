@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/services/api";
 import {
@@ -24,10 +24,21 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+
 export default function CreateTicket() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const res = await api.get('/users/me');
+      setCurrentUser(res.data);
+    };
+    fetchCurrentUser();
+  }, []);
+
   
   // Gestion de l'ouverture des menus déroulants
   const [openDropdown, setOpenDropdown] = useState(null); // 'PRIORITY' ou 'CATEGORY'
@@ -84,7 +95,19 @@ export default function CreateTicket() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-
+        {currentUser && !currentUser.isApproved && (
+          <div className="p-4 mb-6 bg-amber-50 border border-amber-200 rounded-xl">
+            <div className="flex items-start gap-3">
+              <Clock className="w-5 h-5 text-amber-600 mt-0.5" />
+              <div>
+                <p className="font-semibold text-amber-900">Compte en attente d'approbation</p>
+                <p className="text-sm text-amber-700 mt-1">
+                  Votre compte doit être approuvé par un administrateur avant de pouvoir créer des tickets.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
       {/* Form Card */}
       <div onClick={() => setOpenDropdown(null)}>
@@ -240,7 +263,7 @@ export default function CreateTicket() {
               <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || (currentUser && !currentUser.isApproved)}
                   className="min-w-[200px] font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/30 h-11"
                 >
                   {loading ? (

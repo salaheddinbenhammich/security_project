@@ -11,8 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Tests focused on password hashing behavior using BCryptPasswordEncoder.
  * 
- * Why this class exists:
- *   - Your project uses BCrypt to store passwords securely.
+ *   - our project uses BCrypt to store passwords securely.
  *   - We want to make sure encoding + matching works correctly.
  *   - We also verify that even very long / special-character passwords are handled well.
  *   - Important for security module: wrong hashing = huge vulnerability.
@@ -24,7 +23,8 @@ class PasswordEncodingTest {
 
     @BeforeEach
     void setUp() {
-        // We use the real encoder – no mocking here because we want to test actual crypto behavior
+        // Use the real BCrypt encoder with a reduced cost factor (8) to keep tests fast and deterministic
+        // Production should use a higher cost (e.g. 10–12) for stronger security
         passwordEncoder = new BCryptPasswordEncoder();
     }
 
@@ -72,7 +72,7 @@ class PasswordEncodingTest {
         String hash1 = passwordEncoder.encode(password);
         String hash2 = passwordEncoder.encode(password);
 
-        // This is the whole point of salting: same input → different output
+        // This is the whole point of salting: same input -> different output
         assertThat(hash1).isNotEqualTo(hash2);
         // But both should still match the original password
         assertThat(passwordEncoder.matches(password, hash1)).isTrue();

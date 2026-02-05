@@ -19,7 +19,9 @@ public record UserDetailResponse(
         Role role,
         Boolean enabled,
         Boolean accountNonLocked,
-        Boolean credentialsNonExpired,
+        Boolean isApproved,
+//        Boolean credentialsNonExpired,
+        Long daysUntilPasswordExpires,
         Boolean deleted,
         LocalDateTime deletedAt,
         String deletedBy,
@@ -28,6 +30,7 @@ public record UserDetailResponse(
         LocalDateTime lastLogin,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        LocalDateTime passwordChangedAt
+        LocalDateTime passwordChangedAt,
+        Boolean isCurrentlyLocked
     ) implements Serializable {
 }

@@ -20,6 +20,8 @@ public class ItIncidentsBackendApplication {
         // Set the environment variables so Spring can see them
         System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
         System.setProperty("JWT_EXPIRATION", dotenv.get("JWT_EXPIRATION"));
+        System.setProperty("JWT_REFRESH_EXPIRATION", dotenv.get("JWT_REFRESH_EXPIRATION"));
+
         System.setProperty("DATABASE_URL", dotenv.get("DATABASE_URL"));
         System.setProperty("DATABASE_USER", dotenv.get("DATABASE_USER"));
         System.setProperty("DATABASE_PASSWORD", dotenv.get("DATABASE_PASSWORD"));

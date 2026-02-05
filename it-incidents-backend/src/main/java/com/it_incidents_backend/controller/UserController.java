@@ -2,6 +2,7 @@
     
     import com.it_incidents_backend.dto.user.*;
     import com.it_incidents_backend.services.users.UserServices;
+    import com.it_incidents_backend.util.SecurityUtils;
     import io.swagger.v3.oas.annotations.Operation;
     import io.swagger.v3.oas.annotations.media.Content;
     import io.swagger.v3.oas.annotations.media.Schema;
@@ -57,8 +58,8 @@
         }
     
         @Operation(
-                summary = "Get user by ID",
-                description = "Returns detailed information about a user by their ID."
+                summary = "(ADMIN) Get user by ID",
+                description = "(ONLY FOR ADMINS) Returns detailed information about a user by their ID."
         )
         @ApiResponses({
                 @ApiResponse(
@@ -73,11 +74,33 @@
                 @ApiResponse(responseCode = "403", description = "Access denied")
         })
         @GetMapping("/{id}")
-        @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.userId")
+        @PreAuthorize("hasRole('ADMIN')")
         UserDetailResponse getUserById(
                 @PathVariable UUID id
         ) {
             return userServices.getUserById(id);
+        }
+
+        @Operation(
+                summary = "Get current user's profile",
+                description = "Returns the authenticated user's own profile information."
+        )
+        @ApiResponses({
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "Profile retrieved successfully",
+                        content = @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = UserDetailResponse.class)
+                        )
+                ),
+                @ApiResponse(responseCode = "401", description = "Not authenticated")
+        })
+        @GetMapping("/me")
+        @PreAuthorize("isAuthenticated()")
+        public UserDetailResponse getCurrentUser() {
+            UUID currentUserId = SecurityUtils.getCurrentUserId();
+            return userServices.getUserById(currentUserId);
         }
     
         @Operation(
@@ -122,6 +145,25 @@
             userServices.updateUserByAdmin(id, userUpdateRequest);
             return ResponseEntity.noContent().build();
         }
+
+        @Operation(
+                summary = "Change own password",
+                description = "Allows authenticated user to change their own password."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "204", description = "Password updated successfully"),
+                @ApiResponse(responseCode = "400", description = "Invalid password format"),
+                @ApiResponse(responseCode = "401", description = "Not authenticated")
+        })
+        @PutMapping("/me/password")
+        @PreAuthorize("isAuthenticated()")
+        public ResponseEntity<Void> updateMyPassword(
+                @RequestBody PasswordChangeRequest passwordChangeRequest
+        ) {
+            UUID currentUserId = SecurityUtils.getCurrentUserId();
+            userServices.updatePassword(currentUserId, passwordChangeRequest);
+            return ResponseEntity.noContent().build();
+        }
     
         @Operation(
                 summary = "Update own profile",
@@ -131,19 +173,18 @@
                 @ApiResponse(responseCode = "204", description = "Profile updated successfully"),
                 @ApiResponse(responseCode = "403", description = "Access denied")
         })
-        @PutMapping("/me/{id}")
-        @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+        @PutMapping("/me")
+        @PreAuthorize("isAuthenticated()")
         ResponseEntity<Void> updateOwnUser(
-                @PathVariable UUID id,
                 @RequestBody UserSelfUpdateRequest userUpdateRequest
         ) {
-            userServices.updateUser(id, userUpdateRequest);
+            userServices.updateCurrentUser(userUpdateRequest);
             return ResponseEntity.noContent().build();
         }
-    
+
         @Operation(
-                summary = "Change user password",
-                description = "Changes the password of a user."
+                summary = "(ADMIN) Change user password",
+                description = "(ONLY FOR ADMINS) Changes the password of a user."
         )
         @ApiResponses({
                 @ApiResponse(responseCode = "204", description = "Password updated successfully"),
@@ -151,7 +192,7 @@
                 @ApiResponse(responseCode = "403", description = "Access denied")
         })
         @PutMapping("/{id}/password")
-        @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+        @PreAuthorize("hasRole('ADMIN')")
         ResponseEntity<Void> updatePassword(
                 @PathVariable UUID id,
                 @RequestBody PasswordChangeRequest passwordChangeRequest
@@ -252,5 +293,23 @@
                 @PathVariable UUID id
         ) {
             return ResponseEntity.ok(userServices.getUserTickets(id));
+        }
+
+        @Operation(
+                summary = "(ADMIN) Approve user account",
+                description = "Approves a pending user account, allowing them to create tickets. Accessible only by administrators."
+        )
+        @ApiResponses({
+                @ApiResponse(responseCode = "204", description = "User account approved successfully"),
+                @ApiResponse(responseCode = "404", description = "User not found"),
+                @ApiResponse(responseCode = "403", description = "Access denied")
+        })
+        @PutMapping("/{id}/approve")
+        @PreAuthorize("hasRole('ADMIN')")
+        ResponseEntity<Void> approveUser(
+                @PathVariable UUID id
+        ) {
+            userServices.approveUser(id);
+            return ResponseEntity.noContent().build();
         }
     }

@@ -5,6 +5,7 @@ import com.it_incidents_backend.exceptions.AppException;
 import com.it_incidents_backend.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.UUID;
 
@@ -55,5 +56,16 @@ public class SecurityUtils {
         }
 
         return (UserPrincipal) authentication.getPrincipal();
+    }
+
+    public static UUID getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return getUserId(authentication);
+    }
+
+    public static boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Role role = getUserRole(authentication);
+        return role == Role.ADMIN;
     }
 }

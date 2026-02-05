@@ -92,12 +92,17 @@ api.interceptors.request.use(
 
 /**
  * Response interceptor - Handle auth errors
- * SECURITY: Auto-logout on 401/403 errors
+ * SECURITY: Auto-logout on 401/403 errors (except password expiration)
  */
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+        
+        console.log("=== API Interceptor - Error Caught ===");
+        console.log("URL:", originalRequest?.url);
+        console.log("Status:", error.response?.status);
+        console.log("Error data:", error.response?.data);
         
         // If token refresh is in progress, queue this request
         if (isRefreshing && !originalRequest._retry) {
@@ -111,19 +116,38 @@ api.interceptors.response.use(
             });
         }
         
-        // Handle 401 Unauthorized
+        // ========== CRITICAL FIX: PASSWORD EXPIRATION HANDLING ==========
+        // Don't auto-logout for password expiration - let login page handle it
+        if (error.response?.status === 403 && error.response?.data?.error === "PASSWORD_EXPIRED") {
+            console.log("✅ Password expiration detected in interceptor - passing through to handler");
+            // Just pass the error through to the login handler
+            // DO NOT clear session or redirect here
+            return Promise.reject(error);
+        }
+        
+        // Handle 401 Unauthorized (invalid/expired token)
         if (error.response?.status === 401) {
+            console.log("❌ 401 Unauthorized - clearing session and redirecting to login");
             clearSession();
-            window.location.href = '/login';
+            // ✅ IMPORTANT: Only redirect if NOT on login page already
+            if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
+            return Promise.reject(error);
         }
         
-        // Handle 403 Forbidden (account locked/disabled)
+        // Handle other 403 Forbidden errors (account locked/disabled)
         if (error.response?.status === 403) {
-            // Show appropriate error message
-            const message = error.response?.data?.message || 'Access forbidden';
-            console.error(message);
+            console.log("❌ 403 Forbidden (non-password-expiration) - clearing session");
+            clearSession();
+            // ✅ IMPORTANT: Only redirect if NOT on login page already
+            if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
+            }
+            return Promise.reject(error);
         }
         
+        console.log("⚠️ Other error - passing through");
         return Promise.reject(error);
     }
 );

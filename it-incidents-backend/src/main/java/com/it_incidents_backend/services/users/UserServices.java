@@ -22,7 +22,7 @@ public interface UserServices {
 
     void updateUserByAdmin(UUID id, UserUpdateRequest updateUserRequest);
 
-    void updateUser(UUID id, UserSelfUpdateRequest userSelfUpdateRequest);
+    void updateCurrentUser(UserSelfUpdateRequest request);
 
     void updatePassword(UUID id, PasswordChangeRequest passwordChangeRequest);
 
@@ -44,6 +44,11 @@ public interface UserServices {
      * Unlock a locked user account and reset failed login attempts
      */
     void unlockUser(UUID id);
+
+    /**
+     * Approve a pending user account (ADMIN only)
+     */
+    void approveUser(UUID id);
 
     /**
      * Get all tickets created by a specific user

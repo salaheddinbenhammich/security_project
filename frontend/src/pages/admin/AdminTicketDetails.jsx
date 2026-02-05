@@ -15,7 +15,8 @@ import {
   Undo2,
   MessageSquare,
   Calendar,
-  Sparkles
+  Sparkles,
+  Archive
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import ConfirmArchiveDialog from "@/components/ticket/ConfirmArchiveDialog";
 
 export default function AdminTicketDetails() {
   const { id } = useParams();
@@ -40,6 +42,7 @@ export default function AdminTicketDetails() {
   const [currentUser, setCurrentUser] = useState("");
   const [isResolveDialogOpen, setIsResolveDialogOpen] = useState(false);
   const [resolutionText, setResolutionText] = useState("");
+  const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
 
   const fetchTicket = async () => {
     try {
@@ -96,6 +99,23 @@ export default function AdminTicketDetails() {
       fetchTicket();
     } catch (err) { 
       toast.error("Erreur mise à jour statut"); 
+    }
+  };
+
+  const handleArchive = async () => {
+    try {
+      await api.put(`/tickets/${id}/status`, { status: "CANCELLED" });
+      
+      await api.post(`/tickets/${id}/comments`, {
+        content: `Ticket annulé par ${currentUser}.`,
+        isInternal: true
+      });
+      
+      toast.success("Ticket annulé");
+      setIsArchiveDialogOpen(false);
+      fetchTicket();
+    } catch (err) {
+      toast.error("Erreur lors de l'annulation");
     }
   };
 
@@ -197,12 +217,22 @@ export default function AdminTicketDetails() {
             {/* ACTION BUTTONS */}
             <div className="flex flex-wrap gap-3">
               {ticket.status === 'PENDING' && (
-                <Button 
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30"
-                  onClick={() => updateStatus("IN_PROGRESS")}
-                >
-                  <PlayCircle className="w-4 h-4 mr-2" /> M'assigner
-                </Button>
+                <>
+                  <Button 
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30"
+                    onClick={() => updateStatus("IN_PROGRESS")}
+                  >
+                    <PlayCircle className="w-4 h-4 mr-2" /> M'assigner
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                    onClick={() => setIsArchiveDialogOpen(true)}
+                  >
+                    <Archive className="w-4 h-4 mr-2" /> Annuler
+                  </Button>
+                </>
               )}
               
               {ticket.status === 'IN_PROGRESS' && (
@@ -213,6 +243,14 @@ export default function AdminTicketDetails() {
                     onClick={() => updateStatus("PENDING")}
                   >
                     <Undo2 className="w-4 h-4 mr-2" /> Relâcher
+                  </Button>
+
+                  <Button 
+                    variant="outline"
+                    className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                    onClick={() => setIsArchiveDialogOpen(true)}
+                  >
+                    <Archive className="w-4 h-4 mr-2" /> Annuler
                   </Button>
 
                   <Button 
@@ -448,6 +486,14 @@ export default function AdminTicketDetails() {
           </div>
         </div>
       </div>
+
+      {/* ARCHIVE DIALOG */}
+      <ConfirmArchiveDialog
+        open={isArchiveDialogOpen}
+        onOpenChange={setIsArchiveDialogOpen}
+        onConfirm={handleArchive}
+        ticketNumber={ticket?.ticketNumber}
+      />
 
       {/* RESOLUTION DIALOG */}
       <Dialog open={isResolveDialogOpen} onOpenChange={setIsResolveDialogOpen}>

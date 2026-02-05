@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import api from "../services/api";
-import { jwtDecode } from "jwt-decode";
-import { User, Lock, Save, Mail, Phone, Shield, CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
+import api from "@/services/api";
+import { User, Lock, Save, Mail, Phone, Shield, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { validatePassword } from "@/utils/auth";
 import PasswordStrength from "@/components/PasswordStrength";
@@ -42,6 +41,9 @@ export default function UserProfile() {
     confirm: false
   });
 
+  // Password strength popover state
+  const [showPasswordStrength, setShowPasswordStrength] = useState(false);
+
   // ========== LOAD USER PROFILE ==========
   
   /**
@@ -51,16 +53,13 @@ export default function UserProfile() {
   useEffect(() => {
     const fetchMyProfile = async () => {
       try {
-        // Extract user ID from JWT token
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        const decoded = jwtDecode(token);
-        const id = decoded.userId || decoded.id || decoded.sub;
-        setUserId(id);
-
         // Fetch user profile data
-        const res = await api.get(`/users/${id}`);
+        const res = await api.get(`/users/me`);
+
+        // Extract user ID from response
+        const currentUserId = res.data.id;
+        setUserId(currentUserId);
+
         setFormData({
           username: res.data.username,
           email: res.data.email,
@@ -97,7 +96,7 @@ export default function UserProfile() {
         phoneNumber: formData.phoneNumber
       };
 
-      await api.put(`/users/me/${userId}`, dataToSend);
+      await api.put(`/users/me`, dataToSend);
       
       toast.success("Informations mises à jour avec succès");
     } catch (err) {
@@ -143,7 +142,7 @@ export default function UserProfile() {
 
     // ========== API CALL ==========
     try {
-      await api.put(`/users/${userId}/password`, {
+      await api.put(`/users/me/password`, {
         currentPassword: passData.currentPassword,
         newPassword: passData.newPassword
       });
@@ -343,7 +342,7 @@ export default function UserProfile() {
 
                 <Separator className="my-3 bg-slate-100" />
 
-                {/* New Password */}
+                {/* New Password with Popover */}
                 <div className="space-y-2">
                   <Label htmlFor="newPass" className="text-sm font-medium text-slate-700">
                     Nouveau mot de passe
@@ -354,6 +353,8 @@ export default function UserProfile() {
                       type={showPasswords.new ? "text" : "password"}
                       value={passData.newPassword}
                       onChange={(e) => setPassData({...passData, newPassword: e.target.value})}
+                      onFocus={() => setShowPasswordStrength(true)}
+                      onBlur={() => setShowPasswordStrength(false)}
                       placeholder="••••••••"
                       className="pr-10 h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                       required
@@ -369,6 +370,21 @@ export default function UserProfile() {
                         <Eye className="w-4 h-4" />
                       )}
                     </button>
+
+                    {/* Password Strength Popover - Comic Bubble Style */}
+                    {showPasswordStrength && passData.newPassword && (
+                      <div className="absolute z-50 left-0 -top-2 -translate-y-full w-[280px] animate-in fade-in zoom-in-95 duration-200">
+                        <div className="relative p-4 bg-white border-2 border-orange-300 rounded-xl shadow-xl">
+                          {/* Comic-style tail pointing down */}
+                          <div className="absolute left-8 -bottom-3 w-6 h-6">
+                            <div className="w-4 h-4 bg-white border-r-2 border-b-2 border-orange-300 rotate-45 transform origin-center"></div>
+                          </div>
+                          
+                          {/* Password strength content */}
+                          <PasswordStrength password={passData.newPassword} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -401,13 +417,6 @@ export default function UserProfile() {
                   </div>
                 </div>
 
-                {/* ========== PASSWORD STRENGTH INDICATOR ========== */}
-                {passData.newPassword && (
-                  <div className="p-3 border border-orange-100 rounded-lg bg-orange-50">
-                    <PasswordStrength password={passData.newPassword} />
-                  </div>
-                )}
-
                 {/* Submit Button */}
                 <div className="pt-1 border-t border-slate-100">
                   <Button 
@@ -419,38 +428,6 @@ export default function UserProfile() {
                   </Button>
                 </div>
               </form>
-            </CardContent>
-          </Card>
-
-          {/* Security Tips Card */}
-          <Card className="shadow-lg border-slate-200 bg-gradient-to-br from-indigo-50 to-purple-50">
-            <CardContent className="p-5">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-indigo-600 rounded-lg">
-                  <AlertCircle className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h4 className="mb-1 text-sm font-bold text-slate-900">Conseils de sécurité</h4>
-                  <p className="text-xs leading-relaxed text-slate-600">
-                    Utilisez un mot de passe fort et unique
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                  <span>8+ caractères</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                  <span>Lettres et chiffres</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                  <span>Caractères spéciaux</span>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>

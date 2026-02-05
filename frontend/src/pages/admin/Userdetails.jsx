@@ -100,8 +100,8 @@ export default function UserDetails() {
 
   const getUserStatus = () => {
     if (!user) return null;
-    if (user.accountNonLocked === false) return "LOCKED";
     if (user.deleted === true) return "DELETED";
+    if (user.isCurrentlyLocked || user.accountNonLocked === false) return "LOCKED";
     if (user.enabled === false) return "DISABLED";
     return "ACTIVE";
   };
@@ -187,6 +187,14 @@ export default function UserDetails() {
     );
   };
 
+  // ========== FIX: Calculate if credentials are expired ==========
+  const isCredentialsNonExpired = () => {
+    if (!user || user.daysUntilPasswordExpires === null || user.daysUntilPasswordExpires === undefined) {
+      return true; // Default to non-expired if data is missing
+    }
+    return user.daysUntilPasswordExpires > 0;
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
@@ -249,7 +257,7 @@ export default function UserDetails() {
                 </Button>
               )}
               
-              {user.accountNonLocked === false && (
+              {(user.isCurrentlyLocked || user.accountNonLocked === false) && (
                 <Button
                   onClick={handleUnlockUser}
                   className="text-white bg-purple-600 shadow-lg hover:bg-purple-700 shadow-purple-500/30"
@@ -471,8 +479,12 @@ export default function UserDetails() {
                         {user.enabled ? <UserCheck className="w-5 h-5 text-green-600" /> : <UserMinus className="w-5 h-5 text-red-600" />}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900">Compte Actif</p>
-                        <p className="text-sm text-slate-500">Le compte peut se connecter</p>
+                        <p className="font-semibold text-slate-900">
+                          {user.enabled ? "Compte Actif" : "Compte Désactivé"}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {user.enabled ? "Le compte peut se connecter" : "Le compte ne peut pas se connecter"}
+                        </p>
                       </div>
                     </div>
                     <Badge className={user.enabled ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
@@ -482,31 +494,46 @@ export default function UserDetails() {
 
                   <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50">
                     <div className="flex items-center gap-3">
-                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${user.accountNonLocked ? 'bg-green-100' : 'bg-orange-100'}`}>
-                        {user.accountNonLocked ? <Unlock className="w-5 h-5 text-green-600" /> : <Lock className="w-5 h-5 text-orange-600" />}
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${user.isCurrentlyLocked || !user.accountNonLocked ? 'bg-orange-100' : 'bg-green-100'}`}>
+                        {user.isCurrentlyLocked || !user.accountNonLocked ? <Lock className="w-5 h-5 text-orange-600" /> : <Unlock className="w-5 h-5 text-green-600" />}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900">Compte Non-Verrouillé</p>
-                        <p className="text-sm text-slate-500">Pas de tentatives de connexion échouées</p>
+                        <p className="font-semibold text-slate-900">
+                          {user.isCurrentlyLocked || !user.accountNonLocked ? "Compte Verrouillé" : "Compte Non-Verrouillé"}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {user.isCurrentlyLocked 
+                            ? "Verrouillé temporairement (tentatives échouées)" 
+                            : !user.accountNonLocked 
+                              ? "Verrouillé par administrateur"
+                              : "Pas de tentatives de connexion échouées"}
+                        </p>
                       </div>
                     </div>
-                    <Badge className={user.accountNonLocked ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}>
-                      {user.accountNonLocked ? "Déverrouillé" : "Verrouillé"}
+                    <Badge className={user.isCurrentlyLocked || !user.accountNonLocked ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"}>
+                      {user.isCurrentlyLocked || !user.accountNonLocked ? "Verrouillé" : "Déverrouillé"}
                     </Badge>
                   </div>
 
+                  {/* ========== FIXED: Use daysUntilPasswordExpires instead of credentialsNonExpired ========== */}
                   <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50">
                     <div className="flex items-center gap-3">
-                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${user.credentialsNonExpired ? 'bg-green-100' : 'bg-yellow-100'}`}>
-                        <Key className="w-5 h-5 text-green-600" />
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${isCredentialsNonExpired() ? 'bg-green-100' : 'bg-yellow-100'}`}>
+                        <Key className={`w-5 h-5 ${isCredentialsNonExpired() ? 'text-green-600' : 'text-yellow-600'}`} />
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900">Identifiants Valides</p>
-                        <p className="text-sm text-slate-500">Les identifiants n'ont pas expiré</p>
+                        <p className="font-semibold text-slate-900">
+                          {isCredentialsNonExpired() ? "Identifiants Valides" : "Identifiants Expirés"}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {isCredentialsNonExpired() 
+                            ? `Expire dans ${user.daysUntilPasswordExpires} jour(s)` 
+                            : "Le mot de passe a expiré (90 jours écoulés)"}
+                        </p>
                       </div>
                     </div>
-                    <Badge className={user.credentialsNonExpired ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}>
-                      {user.credentialsNonExpired ? "Valide" : "Expiré"}
+                    <Badge className={isCredentialsNonExpired() ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}>
+                      {isCredentialsNonExpired() ? "Valide" : "Expiré"}
                     </Badge>
                   </div>
                 </div>

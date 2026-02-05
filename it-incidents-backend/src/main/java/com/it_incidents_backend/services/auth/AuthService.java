@@ -1,12 +1,10 @@
-package com.it_incidents_backend.services.auth;
+    package com.it_incidents_backend.services.auth;
 
-import com.it_incidents_backend.dto.auth.AuthResponse;
-import com.it_incidents_backend.dto.auth.LoginRequest;
-import com.it_incidents_backend.dto.auth.RefreshTokenRequest;
-import com.it_incidents_backend.dto.auth.SignupRequest;
+    import com.it_incidents_backend.dto.auth.*;
 
-public interface AuthService {
-    AuthResponse authenticate(LoginRequest loginRequest);
-    AuthResponse signUp(SignupRequest signUpRequest);
-    AuthResponse refreshToken(RefreshTokenRequest refreshTokenRequest);
-}
+    public interface AuthService {
+        AuthResponse authenticate(LoginRequest loginRequest);
+        AuthResponse signUp(SignupRequest signUpRequest);
+        AuthResponse refreshToken(RefreshTokenRequest refreshTokenRequest);
+        AuthResponse changeExpiredPassword(ChangeExpiredPasswordRequest request);
+    }

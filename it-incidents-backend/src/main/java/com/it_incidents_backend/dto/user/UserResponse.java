@@ -20,7 +20,10 @@ public record UserResponse(
 
         Boolean enabled,
         Boolean accountNonLocked,
+        Boolean isApproved,
         LocalDateTime lastLogin,
-        Integer failedLoginAttempts
+        Integer failedLoginAttempts,
+        LocalDateTime lockedUntil,
+        Boolean isCurrentlyLocked
     ) implements Serializable {
 }
