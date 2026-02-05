@@ -14,7 +14,8 @@ import java.util.UUID;
 @Builder
 public class AuthResponse {
 
-    private String token;           // JWT token
+    private String token;           // JWT access token (short-lived)
+    private String refreshToken;    // JWT refresh token (long-lived)
     private String type = "Bearer"; // Token type
     private UUID id;
     private String username;

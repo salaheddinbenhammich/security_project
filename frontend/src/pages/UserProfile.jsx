@@ -3,6 +3,8 @@ import api from "../services/api";
 import { jwtDecode } from "jwt-decode";
 import { User, Lock, Save, Mail, Phone, Shield, CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { validatePassword } from "@/utils/auth";
+import PasswordStrength from "@/components/PasswordStrength";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,10 +13,12 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Separator } from "@/components/ui/separator";
 
 export default function UserProfile() {
+  // ========== STATE MANAGEMENT ==========
+  
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
 
-  // État pour les infos personnelles
+  // Personal information state
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -24,24 +28,30 @@ export default function UserProfile() {
     role: ""
   });
 
-  // État pour le changement de mot de passe
+  // Password change state
   const [passData, setPassData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: ""
   });
 
-  // État pour la visibilité des mots de passe
+  // Password visibility state
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false
   });
 
-  // 1. Chargement des données de l'utilisateur connecté
+  // ========== LOAD USER PROFILE ==========
+  
+  /**
+   * Fetch current user's profile data
+   * Extracts user ID from JWT token and loads profile
+   */
   useEffect(() => {
     const fetchMyProfile = async () => {
       try {
+        // Extract user ID from JWT token
         const token = localStorage.getItem("token");
         if (!token) return;
 
@@ -49,6 +59,7 @@ export default function UserProfile() {
         const id = decoded.userId || decoded.id || decoded.sub;
         setUserId(id);
 
+        // Fetch user profile data
         const res = await api.get(`/users/${id}`);
         setFormData({
           username: res.data.username,
@@ -69,6 +80,12 @@ export default function UserProfile() {
     fetchMyProfile();
   }, []);
 
+  // ========== UPDATE PERSONAL INFO ==========
+  
+  /**
+   * Update user's personal information
+   * Allows updating: username, email, firstName, lastName, phoneNumber
+   */
   const handleUpdateInfo = async (e) => {
     e.preventDefault();
     try {
@@ -89,83 +106,90 @@ export default function UserProfile() {
     }
   };
 
-  // Mise à jour du Mot de passe
+  // ========== UPDATE PASSWORD ==========
+  
+  /**
+   * Update user's password with validation
+   * 
+   * SECURITY VALIDATIONS:
+   * 1. Current password is required
+   * 2. New passwords must match
+   * 3. New password must meet strength requirements
+   * 4. Cannot reuse current password
+   */
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
+    
+    // ========== CLIENT-SIDE VALIDATIONS ==========
+    
+    // VALIDATION 1: Current password is required
     if (!passData.currentPassword) {
       toast.error("Veuillez entrer votre mot de passe actuel");
       return;
     }
 
+    // VALIDATION 2: New passwords must match
     if (passData.newPassword !== passData.confirmPassword) {
       toast.error("Les nouveaux mots de passe ne correspondent pas");
       return;
     }
 
-    if (passData.newPassword.length < 6) {
-      toast.error("Le nouveau mot de passe doit faire au moins 6 caractères");
+    // VALIDATION 3: Validate password strength
+    const passwordValidation = validatePassword(passData.newPassword);
+    if (!passwordValidation.isValid) {
+      toast.error("Le nouveau mot de passe ne respecte pas les critères de sécurité requis");
       return;
     }
 
+    // ========== API CALL ==========
     try {
       await api.put(`/users/${userId}/password`, {
         currentPassword: passData.currentPassword,
         newPassword: passData.newPassword
       });
       
-      // Reset du formulaire
+      // ========== SUCCESS: RESET FORM ==========
       setPassData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setShowPasswords({ current: false, new: false, confirm: false });
+      
       toast.success("Mot de passe modifié avec succès !");
+      
     } catch (err) {
       console.error(err);
-      // Gestion des erreurs spécifiques (ex: ancien mot de passe incorrect)
-      const message = err.response?.data?.message || "Erreur : Mot de passe actuel incorrect ou format invalide.";
+      // ========== ERROR HANDLING ==========
+      // Server may return specific error messages
+      const message = err.response?.data?.message || "Erreur lors de la modification du mot de passe";
       toast.error(message);
     }
   };
 
+  // ========== LOADING STATE ==========
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
         <div className="relative">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-          <User className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600 animate-pulse" />
+          <div className="w-12 h-12 border-4 border-indigo-200 rounded-full border-t-indigo-600 animate-spin" />
+          <User className="absolute w-5 h-5 text-indigo-600 -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 animate-pulse" />
         </div>
-        <p className="mt-4 text-slate-600 font-medium">Chargement du profil...</p>
+        <p className="mt-4 font-medium text-slate-600">Chargement du profil...</p>
       </div>
     );
   }
 
+  // ========== MAIN RENDER ==========
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="mx-auto space-y-6 max-w-7xl">
       
-      {/* Header with gradient */}
-      {/* <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl p-8 shadow-xl">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:4rem_4rem]" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl" />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         
-        <div className="relative flex items-center gap-4">
-          <div className="flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl shadow-xl">
-            <User className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">Mon Profil</h1>
-            <p className="text-indigo-100 mt-1">Gérez vos informations personnelles et votre sécurité</p>
-          </div>
-        </div>
-      </div> */}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* LEFT COLUMN - Personal Information */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-slate-200 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+        {/* ========== LEFT COLUMN - PERSONAL INFORMATION ========== */}
+        <div className="space-y-6 lg:col-span-2">
+          <Card className="shadow-lg border-slate-200">
+            <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-white border-slate-100">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <CardTitle className="flex items-center gap-2.5 text-slate-900">
-                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl shadow-md">
+                    <div className="flex items-center justify-center w-10 h-10 shadow-md bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl">
                       <User className="w-5 h-5 text-white" />
                     </div>
                     Informations Personnelles
@@ -185,11 +209,12 @@ export default function UserProfile() {
                 </div>
               </div>
             </CardHeader>
+            
             <CardContent className="pt-6">
               <form onSubmit={handleUpdateInfo} className="space-y-5">
                 
                 {/* First Name / Last Name */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="text-sm font-medium text-slate-700">
                       Prénom
@@ -215,7 +240,7 @@ export default function UserProfile() {
                 </div>
 
                 {/* Email / Username */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="email" className="flex items-center gap-2 text-sm font-medium text-slate-700">
                       <Mail className="w-4 h-4 text-indigo-600" /> Email
@@ -255,10 +280,11 @@ export default function UserProfile() {
                   />
                 </div>
 
-                <div className="pt-4 flex justify-end border-t border-slate-100">
+                {/* Submit Button */}
+                <div className="flex justify-end pt-4 border-t border-slate-100">
                   <Button 
                     type="submit" 
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg shadow-indigo-500/30 h-11 px-6"
+                    className="px-6 font-semibold text-white shadow-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-indigo-500/30 h-11"
                   >
                     <Save className="w-4 h-4 mr-2" /> Enregistrer les modifications
                   </Button>
@@ -268,22 +294,25 @@ export default function UserProfile() {
           </Card>
         </div>
 
-        {/* RIGHT COLUMN - Security & Role */}
+        {/* ========== RIGHT COLUMN - SECURITY ========== */}
         <div className="space-y-6">
-          {/* Security Card */}
-          <Card className="border-slate-200 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
+          
+          {/* Password Change Card */}
+          <Card className="shadow-lg border-slate-200">
+            <CardHeader className="border-b border-orange-100 bg-gradient-to-r from-orange-50 to-white">
               <CardTitle className="flex items-center gap-2.5 text-slate-900">
-                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-md">
+                <div className="flex items-center justify-center w-10 h-10 shadow-md bg-gradient-to-br from-orange-500 to-red-500 rounded-xl">
                   <Lock className="w-5 h-5 text-white" />
                 </div>
                 Sécurité
               </CardTitle>
               <CardDescription className="mt-2">Changez votre mot de passe</CardDescription>
             </CardHeader>
+            
             <CardContent className="pt-6">
               <form onSubmit={handleUpdatePassword} className="space-y-4">
                 
+                {/* Current Password */}
                 <div className="space-y-2">
                   <Label htmlFor="currentPass" className="text-sm font-medium text-slate-700">
                     Mot de passe actuel
@@ -295,13 +324,13 @@ export default function UserProfile() {
                       value={passData.currentPassword}
                       onChange={(e) => setPassData({...passData, currentPassword: e.target.value})}
                       placeholder="••••••••"
-                      className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 pr-10"
+                      className="pr-10 h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPasswords({...showPasswords, current: !showPasswords.current})}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      className="absolute transition-colors -translate-y-1/2 right-3 top-1/2 text-slate-400 hover:text-slate-600"
                     >
                       {showPasswords.current ? (
                         <EyeOff className="w-4 h-4" />
@@ -314,6 +343,7 @@ export default function UserProfile() {
 
                 <Separator className="my-3 bg-slate-100" />
 
+                {/* New Password */}
                 <div className="space-y-2">
                   <Label htmlFor="newPass" className="text-sm font-medium text-slate-700">
                     Nouveau mot de passe
@@ -325,13 +355,13 @@ export default function UserProfile() {
                       value={passData.newPassword}
                       onChange={(e) => setPassData({...passData, newPassword: e.target.value})}
                       placeholder="••••••••"
-                      className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 pr-10"
+                      className="pr-10 h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPasswords({...showPasswords, new: !showPasswords.new})}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      className="absolute transition-colors -translate-y-1/2 right-3 top-1/2 text-slate-400 hover:text-slate-600"
                     >
                       {showPasswords.new ? (
                         <EyeOff className="w-4 h-4" />
@@ -342,6 +372,7 @@ export default function UserProfile() {
                   </div>
                 </div>
 
+                {/* Confirm New Password */}
                 <div className="space-y-2">
                   <Label htmlFor="confirmPass" className="text-sm font-medium text-slate-700">
                     Confirmer le nouveau
@@ -353,13 +384,13 @@ export default function UserProfile() {
                       value={passData.confirmPassword}
                       onChange={(e) => setPassData({...passData, confirmPassword: e.target.value})}
                       placeholder="••••••••"
-                      className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 pr-10"
+                      className="pr-10 h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPasswords({...showPasswords, confirm: !showPasswords.confirm})}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      className="absolute transition-colors -translate-y-1/2 right-3 top-1/2 text-slate-400 hover:text-slate-600"
                     >
                       {showPasswords.confirm ? (
                         <EyeOff className="w-4 h-4" />
@@ -370,10 +401,18 @@ export default function UserProfile() {
                   </div>
                 </div>
 
+                {/* ========== PASSWORD STRENGTH INDICATOR ========== */}
+                {passData.newPassword && (
+                  <div className="p-3 border border-orange-100 rounded-lg bg-orange-50">
+                    <PasswordStrength password={passData.newPassword} />
+                  </div>
+                )}
+
+                {/* Submit Button */}
                 <div className="pt-1 border-t border-slate-100">
                   <Button 
                     type="submit" 
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg shadow-orange-500/30 h-11"
+                    className="w-full font-semibold text-white shadow-lg bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-orange-500/30 h-11"
                   >
                     <Lock className="w-4 h-4 mr-2" />
                     Mettre à jour le mot de passe
@@ -384,15 +423,15 @@ export default function UserProfile() {
           </Card>
 
           {/* Security Tips Card */}
-          <Card className="border-slate-200 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg">
+          <Card className="shadow-lg border-slate-200 bg-gradient-to-br from-indigo-50 to-purple-50">
             <CardContent className="p-5">
               <div className="flex items-start gap-3 mb-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-indigo-600 rounded-lg flex-shrink-0">
+                <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 bg-indigo-600 rounded-lg">
                   <AlertCircle className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900 mb-1">Conseils de sécurité</h4>
-                  <p className="text-xs text-slate-600 leading-relaxed">
+                  <h4 className="mb-1 text-sm font-bold text-slate-900">Conseils de sécurité</h4>
+                  <p className="text-xs leading-relaxed text-slate-600">
                     Utilisez un mot de passe fort et unique
                   </p>
                 </div>

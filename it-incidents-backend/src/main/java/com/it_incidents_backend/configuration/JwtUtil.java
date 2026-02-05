@@ -20,43 +20,91 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    // Refresh token has longer expiration (7 days)
+    @Value("${jwt.refresh-expiration:604800000}") // Default: 7 days
+    private long refreshExpiration;
+
+    /**
+     * Generate signing key from secret
+     * - Uses HMAC-SHA algorithm for JWT signing
+     */
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    // Generate JWT token with role
+    /**
+     * Generate access token (short-lived)
+     * - Contains user identity and role
+     * - Expires in 24 hours by default
+     */
     public String generateToken(String username, UUID userId, Role role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .subject(username)
-                .claim("userId", userId.toString())  // ← Convertir UUID en String
+                .claim("userId", userId.toString())
                 .claim("role", role.name())
+                .claim("type", "access") // Token type
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
                 .compact();
     }
 
-    // Extract username from token
+    /**
+     * Generate refresh token (long-lived)
+     * - Used to obtain new access tokens
+     * - Expires in 7 days by default
+     */
+    public String generateRefreshToken(String username, UUID userId) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + refreshExpiration);
+
+        return Jwts.builder()
+                .subject(username)
+                .claim("userId", userId.toString())
+                .claim("type", "refresh") // Token type
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    /**
+     * Extract username from token
+     */
     public String getUsernameFromToken(String token) {
         return getClaims(token).getSubject();
     }
 
-    // Extract userId from token
+    /**
+     * Extract userId from token
+     */
     public UUID getUserIdFromToken(String token) {
         String userIdStr = getClaims(token).get("userId", String.class);
         return userIdStr != null ? UUID.fromString(userIdStr) : null;
     }
 
-    // Extract role from token
+    /**
+     * Extract role from token
+     */
     public Role getRoleFromToken(String token) {
         String roleName = getClaims(token).get("role", String.class);
         return Role.valueOf(roleName);
     }
 
-    // Validate token
+    /**
+     * Get token type (access or refresh)
+     */
+    public String getTokenType(String token) {
+        return getClaims(token).get("type", String.class);
+    }
+
+    /**
+     * Validate token
+     * - Checks signature, expiration, and structure
+     */
     public boolean validateToken(String token) {
         try {
             getClaims(token);
@@ -66,7 +114,9 @@ public class JwtUtil {
         }
     }
 
-    // Check if token is expired
+    /**
+     * Check if token is expired
+     */
     public boolean isTokenExpired(String token) {
         try {
             Date expiration = getClaims(token).getExpiration();
@@ -76,6 +126,9 @@ public class JwtUtil {
         }
     }
 
+    /**
+     * Extract all claims from token
+     */
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
