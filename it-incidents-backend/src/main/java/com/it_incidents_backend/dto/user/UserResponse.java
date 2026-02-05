@@ -3,6 +3,7 @@ package com.it_incidents_backend.dto.user;
 import com.it_incidents_backend.entities.Role;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -15,6 +16,11 @@ public record UserResponse(
         String firstName,
         String lastName,
         String phoneNumber,
-        Role role
+        Role role,
+
+        Boolean enabled,
+        Boolean accountNonLocked,
+        LocalDateTime lastLogin,
+        Integer failedLoginAttempts
     ) implements Serializable {
 }

@@ -18,6 +18,7 @@ import UserTickets from "./pages/User/UserTickets";
 import { getToken } from "@/utils/auth";
 import { Toaster } from "sonner";
 import UserTicketDetails from "./pages/User/UserTicketDetails";
+import UserDetails from "./pages/admin/UserDetails";
 
 // ────────────────────────────────────────────────
 // Route Guards
@@ -86,6 +87,7 @@ function App() {
           {/* ─── ADMIN AREA ─── only ROLE_ADMIN allowed ─── */}
           <Route path="/admin" element={<AdminRoute><AdminTicketsBoard /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/users/:userId" element={<AdminRoute><UserDetails /></AdminRoute>} />
           <Route path="/admin/tickets/:id" element={<AdminRoute><AdminTicketDetails /></AdminRoute>} />
           <Route path="/admin/history" element={<AdminRoute><AdminHistory /></AdminRoute>} />
           <Route path="/admin/profile" element={<AdminRoute><UserProfile /></AdminRoute>} />

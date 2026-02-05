@@ -1,6 +1,5 @@
 package com.it_incidents_backend.controller;
 
-
 import com.it_incidents_backend.dto.user.*;
 import com.it_incidents_backend.services.users.UserServices;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,7 +49,6 @@ public class UserController {
     })
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-
     Page<UserResponse> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size
@@ -100,7 +98,6 @@ public class UserController {
     })
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-
     UserResponse createUser(
             @RequestBody UserCreateRequest userCreateRequest
     ) {
@@ -118,7 +115,6 @@ public class UserController {
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-
     ResponseEntity<Void> updateUser(
             @PathVariable UUID id,
             @RequestBody UserUpdateRequest userUpdateRequest
@@ -126,7 +122,6 @@ public class UserController {
         userServices.updateUserByAdmin(id, userUpdateRequest);
         return ResponseEntity.noContent().build();
     }
-
 
     @Operation(
             summary = "Update own profile",
@@ -145,7 +140,6 @@ public class UserController {
         userServices.updateUser(id, userUpdateRequest);
         return ResponseEntity.noContent().build();
     }
-
 
     @Operation(
             summary = "Change user password",
@@ -177,11 +171,86 @@ public class UserController {
     })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-
     ResponseEntity<Void> deleteUser(
             @PathVariable UUID id
     ) {
         userServices.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ========== NEW ENDPOINTS FOR ACCOUNT MANAGEMENT ==========
+
+    @Operation(
+            summary = "(ADMIN) Enable user account",
+            description = "Enables a disabled user account. Accessible only by administrators."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "User account enabled successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @PutMapping("/{id}/enable")
+    @PreAuthorize("hasRole('ADMIN')")
+    ResponseEntity<Void> enableUser(
+            @PathVariable UUID id
+    ) {
+        userServices.enableUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "(ADMIN) Disable user account",
+            description = "Disables a user account. Accessible only by administrators."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "User account disabled successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @PutMapping("/{id}/disable")
+    @PreAuthorize("hasRole('ADMIN')")
+    ResponseEntity<Void> disableUser(
+            @PathVariable UUID id
+    ) {
+        userServices.disableUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "(ADMIN) Unlock user account",
+            description = "Unlocks a locked user account. Accessible only by administrators."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "User account unlocked successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @PutMapping("/{id}/unlock")
+    @PreAuthorize("hasRole('ADMIN')")
+    ResponseEntity<Void> unlockUser(
+            @PathVariable UUID id
+    ) {
+        userServices.unlockUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "(ADMIN) Get user's tickets",
+            description = "Returns all tickets created by a specific user. Accessible only by administrators."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User tickets retrieved successfully"
+            ),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @GetMapping("/{id}/tickets")
+    @PreAuthorize("hasRole('ADMIN')")
+    ResponseEntity<?> getUserTickets(
+            @PathVariable UUID id
+    ) {
+        return ResponseEntity.ok(userServices.getUserTickets(id));
     }
 }
