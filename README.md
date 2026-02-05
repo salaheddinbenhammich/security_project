@@ -5,7 +5,7 @@ This project is a **full-stack web application** composed of:
 - **Frontend**: React
 - **Database**: Postgresql (running in Docker)
 
-The backend and frontend run **locally**, while the database runs **inside Docker**.
+The backend and frontend run **locally**, while the database runs **inside Docker** (ofc you can configure Postgresql on local too if you want, but docker is easy).
 
 ---
 
