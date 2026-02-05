@@ -9,7 +9,15 @@ The backend and frontend run **locally**, while the database runs **inside Docke
 
 ---
 
+
 ## 🚀 How to Run the Project
+
+1. Start the database  
+2. Configure environment variables  
+3. Run the backend  
+4. Run the frontend  
+
+---
 
 
 ## ⚙️ Prerequisites
@@ -46,7 +54,21 @@ docker run --name it-incidents-db \
 ```bash
 docker ps
 ```
+---
+## 🔧 Environment Variables
+Create a .env file in the root of the backend project with the following content:
+```bash
+# Database Configuration
+DATABASE_URL=jdbc:postgresql://localhost:5432/it_incidents
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
 
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_here
+JWT_EXPIRATION=3600000         # 1 hour in milliseconds (you can change it)
+JWT_REFRESH_EXPIRATION=86400000 # 1 day in milliseconds  (you can change it)
+
+```
 ---
 
 ## 🔐 Demo Users & Credentials
@@ -70,26 +92,15 @@ Passwords are stored securely using **BCrypt hashing** in the database and canno
 cd it-incidents-backend
 ```
 
-### 2. Configure database connection
-
-Check `application.yml` or `application.properties`:
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/incident_db
-spring.datasource.username=root
-spring.datasource.password=root
-```
-
-> ⚠️ `localhost` works because Docker exposes MySQL on port `3306`.
-
-### 3. Start backend
-```bash
-mvn clean install OR .\mvnw clean install
-```
+### 2. Build the project
 
 ```bash
-mvn spring-boot:run OR .\mvnw spring-boot:run
+mvn clean install OR on Windows .\mvnw clean install
 ```
+### 3. Run the backend
+```bash
+mvn spring-boot:run ``` OR on Windows ```bash.\mvnw spring-boot:run ```
+
 
 Wait until you see:
 
@@ -129,7 +140,18 @@ npm run dev
 Frontend will run on:
 
 ```
-http://localhost:3000
+http://localhost:5173
 ```
 
+---
+
+## ⚡ Notes
+
+Make sure the PostgreSQL container is running before starting the backend.
+
+If ports 5432, 8080, or 3000 are already in use, adjust the docker run port mappings or frontend/backend configs.
+
+.env should never be committed to a public repository since it contains secrets.
+
+Demo users are created automatically by the DataSeeder on the first run.
 ---
