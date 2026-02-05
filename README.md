@@ -99,8 +99,8 @@ mvn clean install OR on Windows .\mvnw clean install
 ```
 ### 3. Run the backend
 ```bash
-mvn spring-boot:run ``` OR on Windows ```bash.\mvnw spring-boot:run ```
-
+mvn spring-boot:run OR on Windows .\mvnw spring-boot:run
+```
 
 Wait until you see:
 
@@ -108,11 +108,8 @@ Wait until you see:
 Started ItIncidentsBackendApplication
 ```
 
-Backend will run on:
+Backend will run on: http://localhost:8080
 
-```
-http://localhost:8080
-```
 
 ---
 
