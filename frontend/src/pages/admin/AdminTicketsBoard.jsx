@@ -14,9 +14,9 @@ import {
   Calendar,
   ArrowUpDown,
   XCircle,
-  ChevronDown
+  ChevronDown,
+  Ticket as TicketIcon
 } from "lucide-react";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
@@ -28,13 +28,14 @@ export default function AdminTicketsBoard() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState("Admin");
-
+  
   // --- ÉTATS DES FILTRES ---
-  const [searchTerm, setSearchTerm] = useState("");     // Recherche texte
-  const [filterDate, setFilterDate] = useState("");     // Filtre date (YYYY-MM-DD)
-  const [sortDesc, setSortDesc] = useState(true);       // Tri (true = plus récent en premier)
-  const [filterPriority, setFilterPriority] = useState("ALL"); // NOUVEAU : État priorité
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [sortDesc, setSortDesc] = useState(true);
+  const [filterPriority, setFilterPriority] = useState("ALL");
   const [isPriorityOpen, setIsPriorityOpen] = useState(false);
+  
   // États actions
   const [resolutionText, setResolutionText] = useState("");
   const [selectedTicketId, setSelectedTicketId] = useState(null);
@@ -71,32 +72,28 @@ export default function AdminTicketsBoard() {
 
   useEffect(() => { fetchTickets(); }, []);
 
-  // --- LOGIQUE DE FILTRAGE PUISSANTE ---
+  // --- LOGIQUE DE FILTRAGE ---
   const filteredTickets = tickets.filter(ticket => {
-     // 1. Recherche Texte (Titre, Numéro, ou Auteur)
-     const searchLower = searchTerm.toLowerCase();
-     // Note: On utilise ?. pour éviter le crash si createdBy est null
-     const titleMatch = (ticket.title || "").toLowerCase().includes(searchLower);
-     const numberMatch = (ticket.ticketNumber || "").toLowerCase().includes(searchLower);
-     const userMatch = (ticket.createdBy?.username || ticket.authorUsername || "").toLowerCase().includes(searchLower);
-     
-     const matchesSearch = titleMatch || numberMatch || userMatch;
-
-     // 2. Filtre Date (Si une date est sélectionnée)
-     let matchesDate = true;
-     if (filterDate) {
-         // On compare la partie YYYY-MM-DD
-         const ticketDate = new Date(ticket.createdAt).toISOString().split('T')[0];
-         matchesDate = ticketDate === filterDate;
-     }
-     let matchesPriority = true;
-     if (filterPriority !== "ALL") {
-         matchesPriority = ticket.priority === filterPriority;
-     }
-
-      return matchesSearch && matchesDate && matchesPriority;
+    const searchLower = searchTerm.toLowerCase();
+    const titleMatch = (ticket.title || "").toLowerCase().includes(searchLower);
+    const numberMatch = (ticket.ticketNumber || "").toLowerCase().includes(searchLower);
+    const userMatch = (ticket.createdBy?.username || ticket.authorUsername || "").toLowerCase().includes(searchLower);
+    
+    const matchesSearch = titleMatch || numberMatch || userMatch;
+    
+    let matchesDate = true;
+    if (filterDate) {
+      const ticketDate = new Date(ticket.createdAt).toISOString().split('T')[0];
+      matchesDate = ticketDate === filterDate;
+    }
+    
+    let matchesPriority = true;
+    if (filterPriority !== "ALL") {
+      matchesPriority = ticket.priority === filterPriority;
+    }
+    
+    return matchesSearch && matchesDate && matchesPriority;
   });
-
   
   // --- LOGIQUE DE TRI ---
   const sortedTickets = [...filteredTickets].sort((a, b) => {
@@ -109,164 +106,198 @@ export default function AdminTicketsBoard() {
   const pendingTickets = sortedTickets.filter(t => t.status === 'PENDING');
   const progressTickets = sortedTickets.filter(t => t.status === 'IN_PROGRESS');
 
-  // --- ACTIONS (Assigner, Résoudre...) ---
+  // --- ACTIONS ---
   const handleAssignToMe = async (ticketId) => {
     try {
       await api.put(`/tickets/${ticketId}/status`, { status: "IN_PROGRESS" });
       await api.post(`/tickets/${ticketId}/comments`, { 
-         content: `Ticket pris en charge par ${currentUser}.`, 
-         isInternal: true 
+        content: `Ticket pris en charge par ${currentUser}.`, 
+        isInternal: true 
       });
       fetchTickets();
-    } catch (err) { alert("Erreur lors de l'assignation"); }
+    } catch (err) { 
+      alert("Erreur lors de l'assignation"); 
+    }
   };
 
-  // const handleArchive = async (ticketId) => {
-  //   if(!window.confirm("Archiver ce ticket ?")) return;
-  //   try {
-  //     await api.put(`/tickets/${ticketId}/status`, { status: "CANCELLED" });
-  //     fetchTickets();
-  //   } catch (err) { alert("Erreur archivage"); }
-  // };
+  const handleArchive = async (ticketId) => {
+    if(!window.confirm("Archiver ce ticket ?")) return;
+    try {
+      await api.put(`/tickets/${ticketId}/status`, { status: "CANCELLED" });
+      fetchTickets();
+    } catch (err) { 
+      alert("Erreur archivage"); 
+    }
+  };
 
   const confirmResolution = async () => {
     if (!selectedTicketId || !resolutionText) return;
     try {
       await api.put(`/tickets/${selectedTicketId}/status`, { 
-        status: "RESOLVED", resolution: resolutionText 
+        status: "RESOLVED", 
+        resolution: resolutionText 
       });
       setIsResolveDialogOpen(false);
       setResolutionText("");
       fetchTickets();
-    } catch (err) { alert("Erreur résolution"); }
+    } catch (err) { 
+      alert("Erreur résolution"); 
+    }
   };
 
   const resetFilters = () => {
-      setSearchTerm("");
-      setFilterDate("");
-      setFilterPriority("ALL");
+    setSearchTerm("");
+    setFilterDate("");
+    setFilterPriority("ALL");
   };
-  if (loading) return <div className="p-8 flex justify-center text-slate-500">Chargement...</div>;
+
+  const activeFiltersCount = [
+    searchTerm !== "",
+    filterDate !== "",
+    filterPriority !== "ALL"
+  ].filter(Boolean).length;
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="relative">
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+          <TicketIcon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600 animate-pulse" />
+        </div>
+        <p className="mt-4 text-slate-600 font-medium">Chargement des tickets...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen p-6 space-y-6 bg-slate-50/50">
+    <div className="max-w-7xl mx-auto space-y-6">
       
-      {/* --- BARRE D'OUTILS DE FILTRES --- */}
-      <div className="flex flex-col items-start justify-between gap-4 p-4 bg-white border rounded-lg shadow-sm xl:flex-row xl:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Pilotage Incidents</h1>
-          <p className="text-sm text-slate-500">
-             {filteredTickets.length} ticket(s) affiché(s)
-          </p>
-        </div>
-        
-        <div className="flex flex-wrap items-center w-full gap-3 xl:w-auto">
+      {/* --- STANDARDIZED FILTER BAR --- */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 p-6 backdrop-blur-sm">
+        <div className="flex flex-col lg:flex-row gap-4">
           
-          {/* 1. Recherche Texte */}
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Rechercher (titre, user...)" 
-              className="pl-9"
+          {/* Search with icon */}
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-slate-400" />
+            </div>
+            <Input
+              placeholder="Rechercher par titre, numéro, utilisateur..."
+              className="pl-12 h-12 text-base border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
-             {searchTerm && (
-                <button onClick={() => setSearchTerm("")} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
-                    <XCircle className="w-4 h-4" />
-                </button>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
             )}
           </div>
-          {/* Filtre Priorite */}
-          <div className="relative">
-             <div className="absolute left-2.5 top-2.5 text-slate-400 pointer-events-none">
-                <Filter className="h-4 w-4" />
-             </div>
-             <div className="relative">
-             {/* Bouton déclencheur (ressemble à un input) */}
-             <button 
+          
+          {/* Desktop filters */}
+          <div className="flex flex-wrap gap-3">
+            
+            {/* Priority Filter */}
+            <div className="relative">
+              <button 
                 onClick={() => setIsPriorityOpen(!isPriorityOpen)}
-                className={`flex h-10 w-[180px] items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-white focus:outline-none focus:ring-2 focus:ring-slate-950 transition-all ${currentPriorityStyle.color} ${filterPriority === 'ALL' ? 'border-slate-200' : 'border'}`}
-             >
+                className={`flex h-12 w-[180px] items-center justify-between rounded-xl border px-4 py-2 text-sm font-medium ring-offset-white focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all hover:bg-slate-50 ${currentPriorityStyle.color}`}
+              >
                 <div className="flex items-center gap-2">
-                    <CurrentIcon className="h-4 w-4" />
-                    <span>{currentPriorityStyle.label}</span>
+                  <CurrentIcon className="h-4 w-4" />
+                  <span>{currentPriorityStyle.label}</span>
                 </div>
                 <ChevronDown className="h-4 w-4 opacity-50" />
-             </button>
+              </button>
 
-             {/* Liste déroulante (s'affiche si ouvert) */}
-             {isPriorityOpen && (
+              {isPriorityOpen && (
                 <>
-                    {/* Overlay invisible pour fermer en cliquant ailleurs */}
-                    <div className="fixed inset-0 z-10" onClick={() => setIsPriorityOpen(false)}></div>
-                    
-                    <div className="absolute top-full mt-2 left-0 w-[180px] z-20 rounded-md border border-slate-200 bg-white shadow-lg py-1 animate-in fade-in zoom-in-95 duration-100">
-                        {Object.entries(priorityStyles).map(([key, style]) => {
-                            const Icon = style.icon;
-                            return (
-                                <button
-                                    key={key}
-                                    onClick={() => {
-                                        setFilterPriority(key);
-                                        setIsPriorityOpen(false);
-                                    }}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${filterPriority === key ? 'bg-slate-100 font-medium' : ''}`}
-                                >
-                                    {/* On affiche le petit badge coloré dans la liste aussi */}
-                                    <div className={`p-1 rounded-full border ${key === 'ALL' ? 'bg-slate-100 border-slate-200' : style.color}`}>
-                                        <Icon className="h-3 w-3" />
-                                    </div>
-                                    <span className="text-slate-700">{style.label}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
+                  <div className="fixed inset-0 z-[9998]" onClick={() => setIsPriorityOpen(false)}></div>
+                  <div className="absolute top-full mt-2 left-0 w-[180px] z-[9999] rounded-md border border-slate-200 bg-white shadow-lg py-1 animate-in fade-in zoom-in-95 duration-100">
+                    {Object.entries(priorityStyles).map(([key, style]) => {
+                      const Icon = style.icon;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setFilterPriority(key);
+                            setIsPriorityOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${filterPriority === key ? 'bg-slate-100 font-medium' : ''}`}
+                        >
+                          <div className={`p-1 rounded-full border ${key === 'ALL' ? 'bg-slate-100 border-slate-200' : style.color}`}>
+                            <Icon className="h-3 w-3" />
+                          </div>
+                          <span className="text-slate-700">{style.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </>
-             )}
-          </div>
-          </div>
+              )}
+            </div>
 
-          {/* 2. Filtre Date */}
-          <div className="relative">
-             <div className="absolute left-2.5 top-2.5 text-slate-400 pointer-events-none">
+            {/* Date Filter */}
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                 <Calendar className="w-4 h-4" />
-             </div>
-             <input 
+              </div>
+              <input 
                 type="date" 
-                className="flex w-full h-10 px-3 py-2 text-sm bg-white border rounded-md border-slate-200 pl-9 ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-12 w-full px-4 pl-11 text-sm bg-white border border-slate-200 rounded-xl ring-offset-white focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
-             />
+              />
+            </div>
+
+            {/* Sort Button */}
+            <Button 
+              variant="outline"
+              onClick={() => setSortDesc(!sortDesc)}
+              className="h-12 w-[160px] justify-between border-slate-200 hover:bg-slate-50 hover:border-indigo-300 transition-all"
+            >
+              {sortDesc ? "Plus récents" : "Plus anciens"}
+              <ArrowUpDown className="w-4 h-4 ml-2 opacity-50" />
+            </Button>
           </div>
-
-          {/* 3. Tri (Date) */}
-          <Button 
-            variant="outline"
-            onClick={() => setSortDesc(!sortDesc)}
-            className="w-[160px] justify-between"
-          >
-            {sortDesc ? "Plus récents" : "Plus anciens"}
-            <ArrowUpDown className="w-4 h-4 ml-2 opacity-50" />
-          </Button>
-
-          {/* Bouton Reset */}
-          {(searchTerm || filterDate) && (
-             <Button variant="ghost" onClick={() => { setSearchTerm(""); setFilterDate(""); }} className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                Effacer filtres
-             </Button>
+        </div>
+        
+        {/* Results info */}
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+          <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-slate-700 font-semibold">
+              <TicketIcon className="w-4 h-4 text-indigo-600" />
+              <span className="text-indigo-600">{filteredTickets.length}</span>
+              <span>ticket(s)</span>
+            </div>
+          </div>
+          
+          {activeFiltersCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetFilters}
+              className="text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
+            >
+              <XCircle className="w-4 h-4 mr-1" />
+              Réinitialiser
+            </Button>
           )}
         </div>
       </div>
 
       {/* --- LE BOARD (Colonnes) --- */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         
         {/* COLONNE 1 : À TRAITER */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-orange-200">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-orange-800">
-              À Traiter <Badge className="bg-orange-600">{pendingTickets.length}</Badge>
+          <div className="flex items-center justify-between pb-3 border-b-2 border-orange-200">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-orange-800">
+              À Traiter 
+              <Badge className="bg-orange-600 hover:bg-orange-600">{pendingTickets.length}</Badge>
             </h2>
           </div>
           
@@ -286,12 +317,13 @@ export default function AdminTicketsBoard() {
 
         {/* COLONNE 2 : EN COURS */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-blue-200">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-blue-800">
-              En Cours <Badge className="bg-blue-600">{progressTickets.length}</Badge>
+          <div className="flex items-center justify-between pb-3 border-b-2 border-blue-200">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-blue-800">
+              En Cours 
+              <Badge className="bg-blue-600 hover:bg-blue-600">{progressTickets.length}</Badge>
             </h2>
           </div>
-
+          
           <div className="space-y-3">
             {progressTickets.map(ticket => (
               <TicketCard 
@@ -302,7 +334,7 @@ export default function AdminTicketsBoard() {
                 onArchive={() => handleArchive(ticket.id)}
               />
             ))}
-             {progressTickets.length === 0 && <EmptyState text="Aucun ticket en cours" />}
+            {progressTickets.length === 0 && <EmptyState text="Aucun ticket en cours" />}
           </div>
         </div>
       </div>
@@ -310,107 +342,137 @@ export default function AdminTicketsBoard() {
       {/* MODALE RESOLUTION */}
       <Dialog open={isResolveDialogOpen} onOpenChange={setIsResolveDialogOpen}>
         <DialogContent>
-            <DialogHeader><DialogTitle>Résolution du Ticket</DialogTitle></DialogHeader>
-            <div className="py-4 space-y-2">
-                <Label>Détails de la solution</Label>
-                <Input value={resolutionText} onChange={e => setResolutionText(e.target.value)} placeholder="Ex: Serveur redémarré..." />
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsResolveDialogOpen(false)}>Annuler</Button>
-                <Button onClick={confirmResolution} className="bg-green-600">Valider</Button>
-            </DialogFooter>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl shadow-md">
+                <CheckCircle2 className="w-5 h-5 text-white" />
+              </div>
+              Résolution du Ticket
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            <Label className="text-sm font-medium">Détails de la solution</Label>
+            <Input 
+              value={resolutionText} 
+              onChange={e => setResolutionText(e.target.value)} 
+              placeholder="Ex: Serveur redémarré, configuration mise à jour..."
+              className="h-11 border-slate-200 focus:border-green-500 focus:ring-2 focus:ring-green-200"
+            />
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsResolveDialogOpen(false)}
+              className="border-slate-200"
+            >
+              Annuler
+            </Button>
+            <Button 
+              onClick={confirmResolution} 
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/30"
+            >
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              Valider
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
 
-// --- SOUS-COMPOSANT : CARTE TICKET (SÉCURISÉ) ---
+// --- SOUS-COMPOSANT : CARTE TICKET ---
 function TicketCard({ ticket, type, onAssign, onArchive, onResolve }) {
-    // SÉCURITÉ : On vérifie si createdBy existe, sinon on met "Inconnu"
-    const creatorName = ticket.createdByUsername || "Inconnu";
-    const initials = creatorName.substring(0, 2).toUpperCase();
-    
-    // SÉCURITÉ : Description
-    const description = ticket.description || "Pas de description disponible.";
+  const creatorName = ticket.createdByUsername || "Inconnu";
+  const initials = creatorName.substring(0, 2).toUpperCase();
+  const description = ticket.description || "Pas de description disponible.";
+  
+  const priorityConfig = {
+    CRITICAL: { color: "bg-red-100 text-red-700 border-red-200", icon: AlertCircle },
+    HIGH: { color: "bg-orange-100 text-orange-700 border-orange-200", icon: AlertCircle },
+    MEDIUM: { color: "bg-blue-100 text-blue-700 border-blue-200", icon: Clock },
+    LOW: { color: "bg-slate-100 text-slate-700 border-slate-200", icon: Clock }
+  };
+  
+  const priorityStyle = priorityConfig[ticket.priority] || priorityConfig.MEDIUM;
+  const PriorityIcon = priorityStyle.icon;
 
-    const priorityColor = {
-        CRITICAL: "bg-red-100 text-red-700 border-red-200",
-        HIGH: "bg-orange-100 text-orange-700 border-orange-200",
-        MEDIUM: "bg-blue-100 text-blue-700 border-blue-200",
-        LOW: "bg-slate-100 text-slate-700 border-slate-200"
-    }[ticket.priority] || "bg-slate-100";
+  return (
+    <Card className={`border shadow-sm hover:shadow-lg transition-all group ${type === 'PENDING' ? 'border-l-4 border-l-orange-500' : 'border-l-4 border-l-blue-500'}`}>
+      <CardHeader className="flex flex-row items-start justify-between px-4 pt-4 pb-2 space-y-0">
+        <div className="flex gap-3">
+          <div className="flex items-center justify-center text-xs font-bold rounded-lg h-10 w-10 bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-700 shadow-sm">
+            {initials}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-slate-900">{creatorName}</p>
+              <span className="text-[10px] text-slate-400 font-mono bg-slate-50 px-2 py-0.5 rounded">{ticket.ticketNumber}</span>
+            </div>
+            <p className="text-xs text-slate-500">
+              {new Date(ticket.createdAt).toLocaleDateString('fr-FR')} à {new Date(ticket.createdAt).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}
+            </p>
+          </div>
+        </div>
+        <Badge variant="outline" className={`${priorityStyle.color} border flex items-center gap-1 font-semibold`}>
+          <PriorityIcon className="w-3 h-3" /> {ticket.priority}
+        </Badge>
+      </CardHeader>
+      
+      <CardContent className="px-4 py-2">
+        <Link to={`/admin/tickets/${ticket.id}`}>
+          <h3 className="mb-1.5 font-semibold transition-colors text-slate-800 group-hover:text-indigo-600 leading-snug">
+            {ticket.title}
+          </h3>
+          <p className="text-sm leading-relaxed text-slate-500 line-clamp-2">
+            {description}
+          </p>
+        </Link>
+        <div className="mt-3">
+          <Badge variant="secondary" className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700">
+            {ticket.category || "General"}
+          </Badge>
+        </div>
+      </CardContent>
 
-    const PriorityIcon = ticket.priority === 'CRITICAL' ? AlertCircle : Clock;
-
-    return (
-        <Card className={`border shadow-sm hover:shadow-md transition-all group ${type === 'PENDING' ? 'border-l-4 border-l-orange-500' : 'border-l-4 border-l-blue-500'}`}>
-            <CardHeader className="flex flex-row items-start justify-between px-4 pt-4 pb-2 space-y-0">
-                <div className="flex gap-3">
-                    <div className="flex items-center justify-center text-xs font-bold border rounded-full h-9 w-9 bg-slate-100 text-slate-600 border-slate-200">
-                        {initials}
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                             <p className="text-sm font-semibold text-slate-900">{creatorName}</p>
-                             <span className="text-[10px] text-slate-400 font-mono">{ticket.ticketNumber}</span>
-                        </div>
-                        <p className="text-xs text-slate-500">
-                            {new Date(ticket.createdAt).toLocaleDateString()} à {new Date(ticket.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                        </p>
-                    </div>
-                </div>
-                <Badge variant="outline" className={`${priorityColor} border flex items-center gap-1`}>
-                    <PriorityIcon className="w-3 h-3" /> {ticket.priority}
-                </Badge>
-            </CardHeader>
-            
-            <CardContent className="px-4 py-2">
-                <Link to={`/admin/tickets/${ticket.id}`}>
-                    <h3 className="mb-1 font-medium transition-colors text-slate-800 group-hover:text-blue-600">
-                        {ticket.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-slate-500 line-clamp-2">
-                        {description}
-                    </p>
-                </Link>
-                <div className="mt-3">
-                    <Badge variant="secondary" className="text-sm font-semibold px-2 py-0.5">
-                        {ticket.category || "General"}
-                    </Badge>
-                </div>
-            </CardContent>
-
-            <CardFooter className="gap-2 px-4 pt-2 pb-3 mt-1 border-t">
-                {type === 'PENDING' ? (
-                    <>
-                        {/* <Button size="sm" variant="outline" className="w-full text-xs h-8 hover:bg-red-50 hover:text-red-600 border-dashed" onClick={onArchive}>
-                            <Archive className="w-3 h-3 mr-2" /> Archiver
-                        </Button> */}
-                        <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-xs h-8" onClick={onAssign}>
-                            <PlayCircle className="w-3 h-3 mr-2" /> Assigner
-                        </Button>
-                    </>
-                ) : (
-                    <>
-                         <Button size="sm" variant="outline" className="w-full h-8 text-xs hover:bg-slate-100" onClick={onArchive}>
-                            <Archive className="w-3 h-3 mr-2" /> Annuler
-                        </Button>
-                        <Button size="sm" className="w-full h-8 text-xs bg-green-600 hover:bg-green-700" onClick={onResolve}>
-                            <CheckCircle2 className="w-3 h-3 mr-2" /> Résoudre
-                        </Button>
-                    </>
-                )}
-            </CardFooter>
-        </Card>
-    );
+      <CardFooter className="gap-2 px-4 pt-2 pb-3 mt-1 border-t border-slate-100">
+        {type === 'PENDING' ? (
+          <Button 
+            size="sm" 
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs h-9 font-semibold shadow-md shadow-blue-500/30" 
+            onClick={onAssign}
+          >
+            <PlayCircle className="w-3.5 h-3.5 mr-2" /> Prendre en charge
+          </Button>
+        ) : (
+          <>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full h-9 text-xs hover:bg-slate-50 border-slate-200" 
+              onClick={onArchive}
+            >
+              <Archive className="w-3.5 h-3.5 mr-2" /> Annuler
+            </Button>
+            <Button 
+              size="sm" 
+              className="w-full h-9 text-xs bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 font-semibold shadow-md shadow-green-500/30" 
+              onClick={onResolve}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 mr-2" /> Résoudre
+            </Button>
+          </>
+        )}
+      </CardFooter>
+    </Card>
+  );
 }
 
 function EmptyState({ text }) {
-    return (
-        <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg border-slate-200 text-slate-400 bg-slate-50/50">
-            <User className="w-8 h-8 mb-2 opacity-20" />
-            <p className="text-sm">{text}</p>
-        </div>
-    );
+  return (
+    <div className="flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-xl border-slate-200 text-slate-400 bg-slate-50/50">
+      <TicketIcon className="w-10 h-10 mb-3 opacity-20" />
+      <p className="text-sm font-medium">{text}</p>
+    </div>
+  );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import { jwtDecode } from "jwt-decode";
-import { User, Lock, Save, Mail, Phone, Shield } from "lucide-react";
+import { User, Lock, Save, Mail, Phone, Shield, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -117,89 +117,142 @@ export default function UserProfile() {
     }
   };
 
-  if (loading) return <div className="p-10 text-center text-slate-500">Chargement du profil...</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="relative">
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+          <User className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 text-indigo-600 animate-pulse" />
+        </div>
+        <p className="mt-4 text-slate-600 font-medium">Chargement du profil...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-1 bg-slate-50 min-h-screen space-y-8">
+    <div className="max-w-7xl mx-auto space-y-6">
       
-      {/* En-tête */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Mon Profil</h1>
-        <p className="text-slate-500">Gérez vos informations personnelles et votre sécurité.</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Header with gradient */}
+      {/* <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 rounded-2xl p-8 shadow-xl">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl" />
         
-        {/* COLONNE GAUCHE : Informations */}
+        <div className="relative flex items-center gap-4">
+          <div className="flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl shadow-xl">
+            <User className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white">Mon Profil</h1>
+            <p className="text-indigo-100 mt-1">Gérez vos informations personnelles et votre sécurité</p>
+          </div>
+        </div>
+      </div> */}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* LEFT COLUMN - Personal Information */}
         <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-600" />
-                Informations Personnelles
-              </CardTitle>
-              <CardDescription>Mettez à jour vos coordonnées.</CardDescription>
+          <Card className="border-slate-200 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <CardTitle className="flex items-center gap-2.5 text-slate-900">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl shadow-md">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    Informations Personnelles
+                  </CardTitle>
+                  <CardDescription className="mt-2">Mettez à jour vos coordonnées</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-500">Rôle:</span>
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold ${
+                    formData.role === 'ADMIN' 
+                      ? 'bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 border border-purple-200' 
+                      : 'bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border border-blue-200'
+                  }`}>
+                    <Shield className="w-3.5 h-3.5" />
+                    {formData.role}
+                  </span>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleUpdateInfo} className="space-y-4">
+            <CardContent className="pt-6">
+              <form onSubmit={handleUpdateInfo} className="space-y-5">
                 
-                {/* Ligne Nom / Prénom */}
+                {/* First Name / Last Name */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">Prénom</Label>
+                    <Label htmlFor="firstName" className="text-sm font-medium text-slate-700">
+                      Prénom
+                    </Label>
                     <Input 
                       id="firstName" 
                       value={formData.firstName} 
-                      onChange={(e) => setFormData({...formData, firstName: e.target.value})} 
+                      onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                      className="h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Nom</Label>
+                    <Label htmlFor="lastName" className="text-sm font-medium text-slate-700">
+                      Nom
+                    </Label>
                     <Input 
                       id="lastName" 
                       value={formData.lastName} 
-                      onChange={(e) => setFormData({...formData, lastName: e.target.value})} 
+                      onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                      className="h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                     />
                   </div>
                 </div>
 
+                {/* Email / Username */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Mail className="w-3 h-3" /> Email
+                    <Label htmlFor="email" className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                      <Mail className="w-4 h-4 text-indigo-600" /> Email
                     </Label>
                     <Input 
+                      id="email"
                       value={formData.email} 
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       type="email"
+                      className="h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Shield className="w-3 h-3" /> Username
+                    <Label htmlFor="username" className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                      <Shield className="w-4 h-4 text-indigo-600" /> Nom d'utilisateur
                     </Label>
                     <Input 
+                      id="username"
                       value={formData.username} 
                       onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      className="h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                     />
                   </div>
                 </div>
 
-                {/* Téléphone */}
+                {/* Phone */}
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="flex items-center gap-2">
-                    <Phone className="w-3 h-3" /> Téléphone
+                  <Label htmlFor="phone" className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <Phone className="w-4 h-4 text-indigo-600" /> Téléphone
                   </Label>
                   <Input 
                     id="phone" 
                     value={formData.phoneNumber} 
                     onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} 
-                    placeholder="+33 6..."
+                    placeholder="+33 6 12 34 56 78"
+                    className="h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                   />
                 </div>
 
-                <div className="pt-4 flex justify-end">
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                <div className="pt-4 flex justify-end border-t border-slate-100">
+                  <Button 
+                    type="submit" 
+                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg shadow-indigo-500/30 h-11 px-6"
+                  >
                     <Save className="w-4 h-4 mr-2" /> Enregistrer les modifications
                   </Button>
                 </div>
@@ -208,21 +261,24 @@ export default function UserProfile() {
           </Card>
         </div>
 
-        {/* COLONNE DROITE : Sécurité */}
+        {/* RIGHT COLUMN - Security & Role */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="w-5 h-5 text-orange-600" />
+          {/* Security Card */}
+          <Card className="border-slate-200 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-orange-50 to-white border-b border-orange-100">
+              <CardTitle className="flex items-center gap-2.5 text-slate-900">
+                <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-md">
+                  <Lock className="w-5 h-5 text-white" />
+                </div>
                 Sécurité
               </CardTitle>
-              <CardDescription>Changez votre mot de passe.</CardDescription>
+              <CardDescription className="mt-2">Changez votre mot de passe</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <form onSubmit={handleUpdatePassword} className="space-y-4">
                 
                 <div className="space-y-2">
-                  <Label htmlFor="currentPass" className="text-slate-700 font-semibold">
+                  <Label htmlFor="currentPass" className="text-sm font-medium text-slate-700">
                     Mot de passe actuel
                   </Label>
                   <Input 
@@ -231,57 +287,88 @@ export default function UserProfile() {
                     value={passData.currentPassword}
                     onChange={(e) => setPassData({...passData, currentPassword: e.target.value})}
                     placeholder="••••••••"
+                    className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                     required
                   />
                 </div>
 
-                <Separator className="my-2" />
+                <Separator className="my-3 bg-slate-100" />
 
                 <div className="space-y-2">
-                  <Label htmlFor="newPass">Nouveau mot de passe</Label>
+                  <Label htmlFor="newPass" className="text-sm font-medium text-slate-700">
+                    Nouveau mot de passe
+                  </Label>
                   <Input 
                     id="newPass" 
                     type="password" 
                     value={passData.newPassword}
                     onChange={(e) => setPassData({...passData, newPassword: e.target.value})}
                     placeholder="••••••••"
+                    className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPass">Confirmer le nouveau mot de passe</Label>
+                  <Label htmlFor="confirmPass" className="text-sm font-medium text-slate-700">
+                    Confirmer le nouveau
+                  </Label>
                   <Input 
                     id="confirmPass" 
                     type="password" 
                     value={passData.confirmPassword}
                     onChange={(e) => setPassData({...passData, confirmPassword: e.target.value})}
                     placeholder="••••••••"
+                    className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                     required
                   />
                 </div>
 
-                <Separator className="my-4" />
-
-                <Button type="submit" variant="outline" className="w-full border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800">
-                  Mettre à jour le mot de passe
-                </Button>
+                <div className="pt-1 border-t border-slate-100">
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg shadow-orange-500/30 h-11"
+                  >
+                    <Lock className="w-4 h-4 mr-2" />
+                    Mettre à jour le mot de passe
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>
 
-          {/* Carte Rôle (Info seulement) */}
-          <Card className="bg-slate-50 border-slate-200">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Votre Rôle</p>
-                <p className="text-lg font-bold text-slate-800">{formData.role}</p>
+          {/* Security Tips Card */}
+          <Card className="border-slate-200 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-lg">
+            <CardContent className="p-5">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-indigo-600 rounded-lg flex-shrink-0">
+                  <AlertCircle className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-1">Conseils de sécurité</h4>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Utilisez un mot de passe fort et unique
+                  </p>
+                </div>
               </div>
-              <Shield className="w-8 h-8 text-slate-300" />
+              
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex items-center gap-1.5 text-xs text-slate-700">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                  <span>8+ caractères</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-700">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                  <span>Lettres et chiffres</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-700">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                  <span>Caractères spéciaux</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
-
       </div>
     </div>
   );
