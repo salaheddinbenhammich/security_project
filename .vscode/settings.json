@@ -1,4 +1,0 @@
-{
-    "DockerRun.DisableAutoGenerateConfig": true,
-    "java.compile.nullAnalysis.mode": "disabled"
-}
