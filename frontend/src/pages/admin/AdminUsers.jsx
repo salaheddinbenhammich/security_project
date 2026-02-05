@@ -16,7 +16,9 @@ import {
   Mail,
   Phone,
   Lock,
-  AlertCircle
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -53,6 +55,10 @@ export default function AdminUsers() {
   const [newUser, setNewUser] = useState({ 
     username: "", email: "", password: "", confirmPassword: "", firstName: "", lastName:"", phoneNumber:"", role: "USER" 
   });
+  
+  // --- PAGINATION ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
 
   // --- CONFIGURATION VISUELLE DES FILTRES ---
   const roleStyles = {
@@ -93,6 +99,17 @@ export default function AdminUsers() {
 
     return matchesSearch && matchesRole;
   });
+
+  // --- PAGINATION ---
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter]);
 
   // --- 3. ACTIONS CRUD ---
   const handleCreateUser = async (e) => {
@@ -515,7 +532,7 @@ export default function AdminUsers() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((u) => (
+                  paginatedUsers.map((u) => (
                     <TableRow key={u.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100">
                       
                       {/* Identity */}
@@ -592,6 +609,126 @@ export default function AdminUsers() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-col items-center gap-6 mt-8">
+          {/* Page info */}
+          <div className="text-sm text-slate-600 font-medium">
+            Page <span className="text-indigo-600 font-bold">{currentPage}</span> sur{" "}
+            <span className="text-indigo-600 font-bold">{totalPages}</span>
+          </div>
+          
+          {/* Pagination controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="group relative flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-200 transition-all duration-300 hover:scale-110 hover:shadow-lg disabled:hover:scale-100 disabled:hover:shadow-none"
+            >
+              <ChevronLeft className="w-4 h-4 text-slate-600 group-hover:text-indigo-600 transition-colors" />
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/10 to-indigo-500/0 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity" />
+            </button>
+            
+            {(() => {
+              const pages = [];
+              const showPages = 5;
+              
+              let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
+              let endPage = Math.min(totalPages, startPage + showPages - 1);
+              
+              if (endPage - startPage < showPages - 1) {
+                startPage = Math.max(1, endPage - showPages + 1);
+              }
+              
+              // First page + ellipsis
+              if (startPage > 1) {
+                pages.push(
+                  <button
+                    key={1}
+                    onClick={() => setCurrentPage(1)}
+                    className={`relative flex items-center justify-center min-w-[40px] h-10 px-3 rounded-xl border font-semibold text-sm transition-all duration-300 hover:scale-110 ${
+                      1 === currentPage
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-lg shadow-indigo-500/50 scale-105'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md'
+                    }`}
+                  >
+                    1
+                    {1 === currentPage && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 rounded-xl animate-pulse" />
+                    )}
+                  </button>
+                );
+                if (startPage > 2) {
+                  pages.push(
+                    <span key="ellipsis1" className="flex items-center justify-center w-8 text-slate-400 font-bold">
+                      ...
+                    </span>
+                  );
+                }
+              }
+              
+              // Page buttons
+              for (let i = startPage; i <= endPage; i++) {
+                pages.push(
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i)}
+                    className={`relative flex items-center justify-center min-w-[40px] h-10 px-3 rounded-xl border font-semibold text-sm transition-all duration-300 hover:scale-110 ${
+                      i === currentPage
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-lg shadow-indigo-500/50 scale-105'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md'
+                    }`}
+                  >
+                    {i}
+                    {i === currentPage && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 rounded-xl animate-pulse" />
+                    )}
+                  </button>
+                );
+              }
+              
+              // Ellipsis + last page
+              if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                  pages.push(
+                    <span key="ellipsis2" className="flex items-center justify-center w-8 text-slate-400 font-bold">
+                      ...
+                    </span>
+                  );
+                }
+                pages.push(
+                  <button
+                    key={totalPages}
+                    onClick={() => setCurrentPage(totalPages)}
+                    className={`relative flex items-center justify-center min-w-[40px] h-10 px-3 rounded-xl border font-semibold text-sm transition-all duration-300 hover:scale-110 ${
+                      totalPages === currentPage
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-lg shadow-indigo-500/50 scale-105'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 hover:shadow-md'
+                    }`}
+                  >
+                    {totalPages}
+                    {totalPages === currentPage && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 rounded-xl animate-pulse" />
+                    )}
+                  </button>
+                );
+              }
+              
+              return pages;
+            })()}
+            
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="group relative flex items-center justify-center w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-200 transition-all duration-300 hover:scale-110 hover:shadow-lg disabled:hover:scale-100 disabled:hover:shadow-none"
+            >
+              <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-indigo-600 transition-colors" />
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/10 to-indigo-500/0 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Edit Dialog */}
       <UserEditDialog

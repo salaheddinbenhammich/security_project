@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Menu, UserCircle, Shield } from "lucide-react";
+import { LogOut, Menu, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/utils/auth";
 
-export default function HeaderBar({ title, user, onToggleSidebar }) {
+export default function HeaderBar({ title, icon: Icon, user, onToggleSidebar }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -45,9 +45,16 @@ export default function HeaderBar({ title, user, onToggleSidebar }) {
           <Menu size={20} />
         </button>
         
-        {/* Page title */}
-        <div>
-          <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
+        {/* Page title with icon */}
+        <div className="flex items-center gap-3">
+          {Icon && (
+            <div className="hidden sm:flex items-center justify-center w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl shadow-md">
+              <Icon className="w-5 h-5 text-white" strokeWidth={2.5} />
+            </div>
+          )}
+          <div>
+            <h1 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">{title}</h1>
+          </div>
         </div>
       </div>
 

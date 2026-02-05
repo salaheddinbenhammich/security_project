@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 import { jwtDecode } from "jwt-decode";
-import { User, Lock, Save, Mail, Phone, Shield, CheckCircle, AlertCircle } from "lucide-react";
+import { User, Lock, Save, Mail, Phone, Shield, CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,13 @@ export default function UserProfile() {
     currentPassword: "",
     newPassword: "",
     confirmPassword: ""
+  });
+
+  // État pour la visibilité des mots de passe
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
   });
 
   // 1. Chargement des données de l'utilisateur connecté
@@ -281,15 +288,28 @@ export default function UserProfile() {
                   <Label htmlFor="currentPass" className="text-sm font-medium text-slate-700">
                     Mot de passe actuel
                   </Label>
-                  <Input 
-                    id="currentPass" 
-                    type="password" 
-                    value={passData.currentPassword}
-                    onChange={(e) => setPassData({...passData, currentPassword: e.target.value})}
-                    placeholder="••••••••"
-                    className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-                    required
-                  />
+                  <div className="relative">
+                    <Input 
+                      id="currentPass" 
+                      type={showPasswords.current ? "text" : "password"}
+                      value={passData.currentPassword}
+                      onChange={(e) => setPassData({...passData, currentPassword: e.target.value})}
+                      placeholder="••••••••"
+                      className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswords({...showPasswords, current: !showPasswords.current})}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPasswords.current ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <Separator className="my-3 bg-slate-100" />
@@ -298,30 +318,56 @@ export default function UserProfile() {
                   <Label htmlFor="newPass" className="text-sm font-medium text-slate-700">
                     Nouveau mot de passe
                   </Label>
-                  <Input 
-                    id="newPass" 
-                    type="password" 
-                    value={passData.newPassword}
-                    onChange={(e) => setPassData({...passData, newPassword: e.target.value})}
-                    placeholder="••••••••"
-                    className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-                    required
-                  />
+                  <div className="relative">
+                    <Input 
+                      id="newPass" 
+                      type={showPasswords.new ? "text" : "password"}
+                      value={passData.newPassword}
+                      onChange={(e) => setPassData({...passData, newPassword: e.target.value})}
+                      placeholder="••••••••"
+                      className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswords({...showPasswords, new: !showPasswords.new})}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPasswords.new ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="confirmPass" className="text-sm font-medium text-slate-700">
                     Confirmer le nouveau
                   </Label>
-                  <Input 
-                    id="confirmPass" 
-                    type="password" 
-                    value={passData.confirmPassword}
-                    onChange={(e) => setPassData({...passData, confirmPassword: e.target.value})}
-                    placeholder="••••••••"
-                    className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-                    required
-                  />
+                  <div className="relative">
+                    <Input 
+                      id="confirmPass" 
+                      type={showPasswords.confirm ? "text" : "password"}
+                      value={passData.confirmPassword}
+                      onChange={(e) => setPassData({...passData, confirmPassword: e.target.value})}
+                      placeholder="••••••••"
+                      className="h-11 border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswords({...showPasswords, confirm: !showPasswords.confirm})}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showPasswords.confirm ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="pt-1 border-t border-slate-100">
