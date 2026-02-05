@@ -15,7 +15,9 @@
     import org.springframework.http.ResponseEntity;
     import org.springframework.security.access.prepost.PreAuthorize;
     import org.springframework.web.bind.annotation.*;
-    
+
+    import java.util.HashMap;
+    import java.util.Map;
     import java.util.UUID;
     
     @RestController
@@ -311,5 +313,19 @@
         ) {
             userServices.approveUser(id);
             return ResponseEntity.noContent().build();
+        }
+
+        @Operation(
+                summary = "Check account status",
+                description = "Lightweight endpoint to verify if the current user's account is still active"
+        )
+        @GetMapping("/me/status")
+        @PreAuthorize("isAuthenticated()")
+        public ResponseEntity<Map<String, String>> checkAccountStatus() {
+            // The JwtAuthenticationFilter already validated the account status
+            // If we reach here, the account is active
+            Map<String, String> status = new HashMap<>();
+            status.put("status", "ACTIVE");
+            return ResponseEntity.ok(status);
         }
     }

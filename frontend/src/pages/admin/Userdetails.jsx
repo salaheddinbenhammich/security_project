@@ -15,7 +15,6 @@ import {
   Unlock,
   AlertCircle,
   Ticket,
-  MessageSquare,
   Activity,
   Settings,
   Sparkles,
@@ -68,6 +67,16 @@ export default function UserDetails() {
     }
   };
 
+  const handleApproveUser = async () => {
+    try {
+      await api.put(`/users/${userId}/approve`);
+      fetchUserDetails();
+      toast.success("Compte approuvé avec succès");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Erreur lors de l'approbation");
+    }
+  };
+
   const handleEnableUser = async () => {
     try {
       await api.put(`/users/${userId}/enable`);
@@ -101,6 +110,7 @@ export default function UserDetails() {
   const getUserStatus = () => {
     if (!user) return null;
     if (user.deleted === true) return "DELETED";
+    if (!user.isApproved) return "PENDING_APPROVAL";
     if (user.isCurrentlyLocked || user.accountNonLocked === false) return "LOCKED";
     if (user.enabled === false) return "DISABLED";
     return "ACTIVE";
@@ -108,7 +118,6 @@ export default function UserDetails() {
 
   const getStatusBadge = () => {
     const status = getUserStatus();
-    
     
     if (status === "DELETED") {
       return (
@@ -118,6 +127,16 @@ export default function UserDetails() {
         </Badge>
       );
     }
+    
+    if (status === "PENDING_APPROVAL") {
+      return (
+        <Badge variant="outline" className="font-semibold text-amber-700 bg-amber-100 border-amber-200">
+          <Clock className="w-4 h-4 mr-1.5" />
+          En attente
+        </Badge>
+      );
+    }
+    
     if (status === "LOCKED") {
       return (
         <Badge variant="outline" className="font-semibold text-orange-700 bg-orange-100 border-orange-200">
@@ -187,10 +206,9 @@ export default function UserDetails() {
     );
   };
 
-  // ========== FIX: Calculate if credentials are expired ==========
   const isCredentialsNonExpired = () => {
     if (!user || user.daysUntilPasswordExpires === null || user.daysUntilPasswordExpires === undefined) {
-      return true; // Default to non-expired if data is missing
+      return true;
     }
     return user.daysUntilPasswordExpires > 0;
   };
@@ -225,7 +243,7 @@ export default function UserDetails() {
   return (
     <div className="mx-auto max-w-7xl">
       
-      {/* HEADER - Fixed at top */}
+      {/* HEADER */}
       <div className="sticky top-0 z-20 px-4 py-4 mb-6 -mx-4 border-b shadow-sm bg-slate-50 border-slate-200">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -238,33 +256,49 @@ export default function UserDetails() {
             </Button>
             
             <div className="flex items-center gap-2">
-              {user.enabled === false ? (
-                <Button
-                  onClick={handleEnableUser}
-                  className="text-white bg-green-600 shadow-lg hover:bg-green-700 shadow-green-500/30"
-                >
-                  <UserCheck className="w-4 h-4 mr-2" />
-                  Activer le compte
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleDisableUser}
-                  variant="outline"
-                  className="text-orange-700 border-orange-200 hover:bg-orange-50"
-                >
-                  <UserMinus className="w-4 h-4 mr-2" />
-                  Désactiver le compte
-                </Button>
-              )}
-              
-              {(user.isCurrentlyLocked || user.accountNonLocked === false) && (
-                <Button
-                  onClick={handleUnlockUser}
-                  className="text-white bg-purple-600 shadow-lg hover:bg-purple-700 shadow-purple-500/30"
-                >
-                  <Unlock className="w-4 h-4 mr-2" />
-                  Déverrouiller
-                </Button>
+              {/* Only show action buttons if not deleted */}
+              {user.deleted !== true && (
+                <>
+                  {/* Approve button - show only if not approved */}
+                  {!user.isApproved && (
+                    <Button
+                      onClick={handleApproveUser}
+                      className="text-white bg-green-600 shadow-lg hover:bg-green-700 shadow-green-500/30"
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Approuver le compte
+                    </Button>
+                  )}
+
+                  {user.enabled === false ? (
+                    <Button
+                      onClick={handleEnableUser}
+                      className="text-white bg-green-600 shadow-lg hover:bg-green-700 shadow-green-500/30"
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Activer le compte
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleDisableUser}
+                      variant="outline"
+                      className="text-orange-700 border-orange-200 hover:bg-orange-50"
+                    >
+                      <UserMinus className="w-4 h-4 mr-2" />
+                      Désactiver le compte
+                    </Button>
+                  )}
+                  
+                  {(user.isCurrentlyLocked || user.accountNonLocked === false) && (
+                    <Button
+                      onClick={handleUnlockUser}
+                      className="text-white bg-purple-600 shadow-lg hover:bg-purple-700 shadow-purple-500/30"
+                    >
+                      <Unlock className="w-4 h-4 mr-2" />
+                      Déverrouiller
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -274,21 +308,19 @@ export default function UserDetails() {
       {/* MAIN CONTENT GRID */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         
-        {/* LEFT COLUMN (2/3) */}
+        {/* LEFT COLUMN */}
         <div className="space-y-6 lg:col-span-2">
 
           {/* USER OVERVIEW CARD */}
           <Card className="overflow-hidden shadow-lg border-slate-200">
             <div className="p-6 border-b bg-gradient-to-r from-slate-50 to-white border-slate-100">
               <div className="flex items-start gap-6">
-                {/* Avatar */}
                 <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
                   <AvatarFallback className="text-2xl font-bold text-white bg-gradient-to-br from-indigo-600 to-purple-600">
                     {user.firstName?.[0]}{user.lastName?.[0]}
                   </AvatarFallback>
                 </Avatar>
 
-                {/* User Info */}
                 <div className="flex-1">
                   <div className="flex items-start justify-between">
                     <div>
@@ -297,8 +329,14 @@ export default function UserDetails() {
                       </h2>
                       <p className="mt-1 text-slate-500">@{user.username}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {getStatusBadge()}
+                      {!user.isApproved && user.deleted !== true && (
+                        <Badge variant="outline" className="font-semibold text-amber-700 bg-amber-100 border-amber-200">
+                          <Clock className="w-4 h-4 mr-1" />
+                          En attente d'approbation
+                        </Badge>
+                      )}
                       <Badge 
                         variant="outline" 
                         className={`font-semibold ${user.role === 'ADMIN' 
@@ -515,7 +553,6 @@ export default function UserDetails() {
                     </Badge>
                   </div>
 
-                  {/* ========== FIXED: Use daysUntilPasswordExpires instead of credentialsNonExpired ========== */}
                   <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50">
                     <div className="flex items-center gap-3">
                       <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${isCredentialsNonExpired() ? 'bg-green-100' : 'bg-yellow-100'}`}>
@@ -625,7 +662,7 @@ export default function UserDetails() {
           )}
         </div>
 
-        {/* RIGHT COLUMN: STICKY SIDEBAR (1/3) */}
+        {/* RIGHT COLUMN */}
         <div className="lg:col-span-1">
           <div className="sticky space-y-6 top-24">
             <Card className="shadow-lg border-slate-200">

@@ -12,6 +12,8 @@ import {
   UserCircle 
 } from "lucide-react";
 import { getToken } from "@/utils/auth";
+import api from "@/services/api";
+import { showSuspensionCountdown } from "@/utils/suspensionHandler";
 
 // Admin menu
 const adminNavItems = [
@@ -55,6 +57,30 @@ export default function MainLayout() {
       navigate('/login');
     }
   }, [navigate]);
+
+  // ========== PERIODIC ACCOUNT STATUS CHECK ==========
+  useEffect(() => {
+    // Only run if user is authenticated
+    if (!user) return;
+
+    const checkAccountStatus = async () => {
+      try {
+        await api.get('/users/me/status');
+        // If we reach here, account is still active
+      } catch (err) {
+        // Error will be caught by API interceptor
+        // which will show countdown toast
+        console.log('Account status check failed:', err);
+      }
+    };
+
+    // Check immediately on mount
+    checkAccountStatus();
+    // Then check every 10 seconds
+    const interval = setInterval(checkAccountStatus, 10000);
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Dynamic page title
   const getPageTitle = () => {

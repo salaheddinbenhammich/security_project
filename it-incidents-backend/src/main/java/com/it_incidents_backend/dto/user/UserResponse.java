@@ -19,6 +19,8 @@ public record UserResponse(
         Role role,
 
         Boolean enabled,
+        Boolean deleted,
+        LocalDateTime deletedAt,
         Boolean accountNonLocked,
         Boolean isApproved,
         LocalDateTime lastLogin,

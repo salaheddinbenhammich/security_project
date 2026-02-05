@@ -1,6 +1,7 @@
 package com.it_incidents_backend.configuration;
 
 import com.it_incidents_backend.entities.Role;
+import com.it_incidents_backend.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.it_incidents_backend.entities.User;
+import java.util.Optional;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -29,6 +32,9 @@ class JwtAuthenticationFilterTest {
 
     @Mock
     private JwtUtil jwtUtil;
+
+    @Mock
+    private UserRepository userRepository;
 
     @Mock
     private FilterChain filterChain;
@@ -65,17 +71,34 @@ class JwtAuthenticationFilterTest {
         request.addHeader("Authorization", "Bearer " + token);
         request.setServletPath("/api/tickets");
 
+        // Mock JWT validation
         when(jwtUtil.validateToken(token)).thenReturn(true);
         when(jwtUtil.isTokenExpired(token)).thenReturn(false);
         when(jwtUtil.getUsernameFromToken(token)).thenReturn("testuser");
         when(jwtUtil.getUserIdFromToken(token)).thenReturn(userId);
         when(jwtUtil.getRoleFromToken(token)).thenReturn(Role.USER);
 
+        // ========== NEW: Mock User Repository ==========
+        // Create a mock active user
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername("testuser");
+        mockUser.setEnabled(true);           // Account is enabled
+        mockUser.setDeleted(false);          // Not deleted
+        mockUser.setAccountNonLocked(true);  // Not locked
+        mockUser.setIsApproved(true);        // Approved
+        mockUser.setLockedUntil(null);       // Not temporarily locked
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        // ================================================
+
         jwtFilter.doFilterInternal(request, response, filterChain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
         assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("testuser");
     }
+
+
 
     @Test
     @DisplayName("Expired JWT should not authenticate")
@@ -118,7 +141,6 @@ class JwtAuthenticationFilterTest {
     @Test
     @DisplayName("multiple authorization headers should handle correctly")
     void multipleAuthHeaders_shouldUseFirstHeader() throws ServletException, IOException {
-        // attacker might try to confuse filter with multiple headers
         request.addHeader("Authorization", "Bearer valid.token.one");
         request.addHeader("Authorization", "Bearer malicious.token.two");
         request.setServletPath("/api/tickets");
@@ -130,9 +152,20 @@ class JwtAuthenticationFilterTest {
         when(jwtUtil.getUserIdFromToken("valid.token.one")).thenReturn(userId);
         when(jwtUtil.getRoleFromToken("valid.token.one")).thenReturn(Role.USER);
 
+        // ========== NEW: Mock User Repository ==========
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername("testuser");
+        mockUser.setEnabled(true);
+        mockUser.setDeleted(false);
+        mockUser.setAccountNonLocked(true);
+        mockUser.setIsApproved(true);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        // ================================================
+
         jwtFilter.doFilterInternal(request, response, filterChain);
 
-        // should only validate first header
         verify(jwtUtil, times(1)).validateToken("valid.token.one");
         verify(jwtUtil, never()).validateToken("malicious.token.two");
     }
@@ -192,5 +225,38 @@ class JwtAuthenticationFilterTest {
         jwtFilter.doFilterInternal(request, response, filterChain);
 
         verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    @DisplayName("Disabled account should not authenticate even with valid JWT")
+    void disabledAccount_shouldNotAuthenticate() throws ServletException, IOException {
+        UUID userId = UUID.randomUUID();
+        String token = "valid.jwt.token";
+        request.addHeader("Authorization", "Bearer " + token);
+        request.setServletPath("/api/tickets");
+
+        when(jwtUtil.validateToken(token)).thenReturn(true);
+        when(jwtUtil.isTokenExpired(token)).thenReturn(false);
+        when(jwtUtil.getUsernameFromToken(token)).thenReturn("testuser");
+        when(jwtUtil.getUserIdFromToken(token)).thenReturn(userId);
+        when(jwtUtil.getRoleFromToken(token)).thenReturn(Role.USER);
+
+        // Mock DISABLED user
+        User mockUser = new User();
+        mockUser.setId(userId);
+        mockUser.setUsername("testuser");
+        mockUser.setEnabled(false);
+        mockUser.setDeleted(false);
+        mockUser.setAccountNonLocked(true);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+
+        jwtFilter.doFilterInternal(request, response, filterChain);
+
+        // Should NOT authenticate
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+
+        // Should send 403 response
+        assertThat(response.getStatus()).isEqualTo(403);
     }
 }

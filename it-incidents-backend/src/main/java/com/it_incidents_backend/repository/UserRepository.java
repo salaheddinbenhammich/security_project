@@ -38,6 +38,16 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT u FROM User u WHERE u.id = :id AND u.deleted = false")
     Optional<User> findByIdAndNotDeleted(@Param("id") UUID id);
 
+    /**
+     * Find user by ID and check if account is active
+     * Returns Optional.empty() if user is deleted, disabled, or locked
+     */
+    @Query("SELECT u FROM User u WHERE u.id = :id " +
+            "AND u.deleted = false " +
+            "AND u.enabled = true " +
+            "AND u.accountNonLocked = true")
+    Optional<User> findActiveUserById(@Param("id") UUID id);
+
     // Count users by role
     long countByRoleAndDeletedFalse(Role role);
 }

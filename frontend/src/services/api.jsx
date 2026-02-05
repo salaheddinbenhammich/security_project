@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getToken, getRefreshToken, clearSession, login, isTokenExpired, updateActivity } from '../utils/auth';
+import { showSuspensionCountdown } from '../utils/suspensionHandler';
 
 const API_URL = 'http://localhost:8080/api';
 
@@ -116,31 +117,45 @@ api.interceptors.response.use(
             });
         }
         
-        // ========== CRITICAL FIX: PASSWORD EXPIRATION HANDLING ==========
-        // Don't auto-logout for password expiration - let login page handle it
+        // ========== PASSWORD EXPIRATION HANDLING ==========
         if (error.response?.status === 403 && error.response?.data?.error === "PASSWORD_EXPIRED") {
-            console.log("✅ Password expiration detected in interceptor - passing through to handler");
-            // Just pass the error through to the login handler
-            // DO NOT clear session or redirect here
+            console.log("✅ Password expiration detected - passing through");
             return Promise.reject(error);
+        }
+        
+        // ========== ACCOUNT SUSPENSION/DISABLED HANDLING ==========
+        if (error.response?.status === 403 && error.response?.data?.error) {
+            const errorCode = error.response.data.error;
+            
+            const suspensionErrors = [
+                'ACCOUNT_DISABLED',
+                'ACCOUNT_DELETED',
+                'ACCOUNT_LOCKED',
+                'ACCOUNT_NOT_APPROVED',
+                'ACCOUNT_NOT_FOUND'
+            ];
+            
+            if (suspensionErrors.includes(errorCode)) {
+                console.log(`❌ Account suspended: ${errorCode}`);
+                showSuspensionCountdown(errorCode);
+                return Promise.reject(error);
+            }
         }
         
         // Handle 401 Unauthorized (invalid/expired token)
         if (error.response?.status === 401) {
-            console.log("❌ 401 Unauthorized - clearing session and redirecting to login");
+            console.log("❌ 401 Unauthorized - clearing session and redirecting");
             clearSession();
-            // ✅ IMPORTANT: Only redirect if NOT on login page already
             if (!window.location.pathname.includes('/login')) {
                 window.location.href = '/login';
             }
             return Promise.reject(error);
         }
         
-        // Handle other 403 Forbidden errors (account locked/disabled)
+        // Handle other 403 errors
         if (error.response?.status === 403) {
-            console.log("❌ 403 Forbidden (non-password-expiration) - clearing session");
+            console.log("❌ 403 Forbidden - clearing session");
             clearSession();
-            // ✅ IMPORTANT: Only redirect if NOT on login page already
             if (!window.location.pathname.includes('/login')) {
                 window.location.href = '/login';
             }

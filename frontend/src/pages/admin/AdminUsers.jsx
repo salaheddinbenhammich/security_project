@@ -22,7 +22,9 @@ import {
   UserCheck,
   UserMinus,
   Unlock,
-  Clock
+  Clock,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -50,6 +52,7 @@ export default function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [sortOrder, setSortOrder] = useState("asc"); // "asc" or "desc"
 
   // États pour les Modales
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -106,33 +109,47 @@ export default function AdminUsers() {
 
   useEffect(() => { fetchUsers(); }, []);
 
-  // --- 2. LOGIQUE DE FILTRAGE ---
-  const filteredUsers = users.filter(user => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = 
-      (user.username || "").toLowerCase().includes(searchLower) ||
-      (user.email || "").toLowerCase().includes(searchLower) ||
-      (user.firstName || "").toLowerCase().includes(searchLower) ||
-      (user.lastName || "").toLowerCase().includes(searchLower);
+  // --- 2. LOGIQUE DE FILTRAGE ET TRI ---
+  const filteredUsers = users
+    .filter(user => {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        (user.username || "").toLowerCase().includes(searchLower) ||
+        (user.email || "").toLowerCase().includes(searchLower) ||
+        (user.firstName || "").toLowerCase().includes(searchLower) ||
+        (user.lastName || "").toLowerCase().includes(searchLower);
 
-    const matchesRole = roleFilter === "ALL" || user.role === roleFilter;
+      const matchesRole = roleFilter === "ALL" || user.role === roleFilter;
 
-    let matchesStatus = true;
-    if (statusFilter === "ACTIVE") {
-      matchesStatus = user.enabled === true && 
-                     !user.isCurrentlyLocked && 
-                     user.accountNonLocked !== false &&
-                     user.deleted !== true;
-    } else if (statusFilter === "DISABLED") {
-      matchesStatus = user.enabled === false;
-    } else if (statusFilter === "LOCKED") {
-      matchesStatus = user.isCurrentlyLocked === true || user.accountNonLocked === false;
-    } else if (statusFilter === "DELETED") {
-      matchesStatus = user.deleted === true;
-    }
+      let matchesStatus = true;
+      if (statusFilter === "ACTIVE") {
+        matchesStatus = user.enabled === true && 
+                       !user.isCurrentlyLocked && 
+                       user.accountNonLocked !== false &&
+                       user.deleted !== true &&
+                       user.isApproved === true;
+      } else if (statusFilter === "DISABLED") {
+        matchesStatus = user.enabled === false;
+      } else if (statusFilter === "LOCKED") {
+        matchesStatus = user.isCurrentlyLocked === true || user.accountNonLocked === false;
+      } else if (statusFilter === "DELETED") {
+        matchesStatus = user.deleted === true;
+      } else if (statusFilter === "PENDING_APPROVAL") {
+        matchesStatus = user.isApproved === false;
+      }
 
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+      return matchesSearch && matchesRole && matchesStatus;
+    })
+    .sort((a, b) => {
+      const usernameA = (a.username || "").toLowerCase();
+      const usernameB = (b.username || "").toLowerCase();
+      
+      if (sortOrder === "asc") {
+        return usernameA.localeCompare(usernameB);
+      } else {
+        return usernameB.localeCompare(usernameA);
+      }
+    });
 
   // --- PAGINATION ---
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
@@ -154,7 +171,6 @@ export default function AdminUsers() {
       return;
     }
 
-    // Use password validation utility
     const passwordValidation = validatePassword(newUser.password);
     if (!passwordValidation.isValid) {
       toast.error("Le mot de passe ne respecte pas les critères de sécurité requis");
@@ -208,7 +224,7 @@ export default function AdminUsers() {
     }
   };
 
-  // --- NEW ACCOUNT MANAGEMENT ACTIONS ---
+  // --- ACCOUNT MANAGEMENT ACTIONS ---
 
   const handleApproveUser = async (userId) => {
     try {
@@ -283,6 +299,16 @@ export default function AdminUsers() {
         </Badge>
       );
     }
+    
+    if (status === "PENDING_APPROVAL") {
+      return (
+        <Badge variant="outline" className="font-semibold text-amber-700 bg-amber-100 border-amber-200">
+          <Clock className="w-3 h-3 mr-1" />
+          En attente
+        </Badge>
+      );
+    }
+    
     if (status === "LOCKED") {
       return (
         <Badge variant="outline" className="font-semibold text-orange-700 bg-orange-100 border-orange-200">
@@ -547,16 +573,13 @@ export default function AdminUsers() {
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
 
-                        {/* Password Strength Popover - Comic Bubble Style */}
+                        {/* Password Strength Popover */}
                         {showPasswordStrength && newUser.password && (
                           <div className="absolute z-50 left-0 -top-2 -translate-y-full w-[280px] animate-in fade-in zoom-in-95 duration-200">
                             <div className="relative p-4 bg-white border-2 border-indigo-300 rounded-xl shadow-xl">
-                              {/* Comic-style tail pointing down */}
                               <div className="absolute left-8 -bottom-3 w-6 h-6">
                                 <div className="w-4 h-4 bg-white border-r-2 border-b-2 border-indigo-300 rotate-45 transform origin-center"></div>
                               </div>
-                              
-                              {/* Password strength content */}
                               <PasswordStrength password={newUser.password} />
                             </div>
                           </div>
@@ -694,7 +717,18 @@ export default function AdminUsers() {
             <Table>
               <TableHeader>
                 <TableRow className="border-b bg-gradient-to-r from-slate-50 to-white border-slate-200">
-                  <TableHead className="font-semibold text-slate-700">Identité</TableHead>
+                  <TableHead className="font-semibold text-slate-700">
+                    <button 
+                      onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                      className="flex items-center gap-2 hover:text-indigo-600 transition-colors group"
+                    >
+                      Identité
+                      <div className="flex flex-col">
+                        <ArrowUp className={`w-3 h-3 ${sortOrder === "asc" ? "text-indigo-600" : "text-slate-300 group-hover:text-slate-400"}`} />
+                        <ArrowDown className={`w-3 h-3 -mt-1 ${sortOrder === "desc" ? "text-indigo-600" : "text-slate-300 group-hover:text-slate-400"}`} />
+                      </div>
+                    </button>
+                  </TableHead>
                   <TableHead className="font-semibold text-slate-700">Contact</TableHead>
                   <TableHead className="font-semibold text-slate-700">Rôle</TableHead>
                   <TableHead className="font-semibold text-slate-700">Statut</TableHead>
@@ -783,7 +817,7 @@ export default function AdminUsers() {
                       {/* Actions */}
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {/* View Details */}
+                          {/* View Details - always visible */}
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -794,76 +828,87 @@ export default function AdminUsers() {
                             <Eye className="w-4 h-4" />
                           </Button>
 
-                          {/* Approve button - show only for pending approval users */}
-                          {!u.isApproved && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleApproveUser(u.id)} 
-                              className="text-green-600 rounded-lg hover:text-green-700 hover:bg-green-50 h-9 w-9"
-                              title="Approuver le compte"
-                            >
-                              <UserCheck className="w-4 h-4" />
-                            </Button>
-                          )}
+                          {/* If deleted, only show view details */}
+                          {u.deleted === true ? null : (
+                            <>
+                              {/* Approve button - show only for pending approval users */}
+                              {!u.isApproved && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleApproveUser(u.id)} 
+                                  className="text-green-600 rounded-lg hover:text-green-700 hover:bg-green-50 h-9 w-9"
+                                  title="Approuver le compte"
+                                >
+                                  <UserCheck className="w-4 h-4" />
+                                </Button>
+                              )}
 
-                          {/* Enable/Disable Toggle */}
-                          {u.enabled === false ? (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleEnableUser(u.id)} 
-                              className="text-green-600 rounded-lg hover:text-green-700 hover:bg-green-50 h-9 w-9"
-                              title="Activer le compte"
-                            >
-                              <UserCheck className="w-4 h-4" />
-                            </Button>
-                          ) : (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleDisableUser(u.id)} 
-                              className="text-orange-600 rounded-lg hover:text-orange-700 hover:bg-orange-50 h-9 w-9"
-                              title="Désactiver le compte"
-                            >
-                              <UserMinus className="w-4 h-4" />
-                            </Button>
-                          )}
+                              {/* Enable/Disable Toggle - only if approved */}
+                              {u.isApproved && (
+                                <>
+                                  {u.enabled === false ? (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      onClick={() => handleEnableUser(u.id)} 
+                                      className="text-green-600 rounded-lg hover:text-green-700 hover:bg-green-50 h-9 w-9"
+                                      title="Activer le compte"
+                                    >
+                                      <UserCheck className="w-4 h-4" />
+                                    </Button>
+                                  ) : (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      onClick={() => handleDisableUser(u.id)} 
+                                      className="text-orange-600 rounded-lg hover:text-orange-700 hover:bg-orange-50 h-9 w-9"
+                                      title="Désactiver le compte"
+                                    >
+                                      <UserMinus className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                </>
+                              )}
 
-                          {/* Unlock if locked */}
-                          {(u.isCurrentlyLocked === true || u.accountNonLocked === false) && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleUnlockUser(u.id)} 
-                              className="text-purple-600 rounded-lg hover:text-purple-700 hover:bg-purple-50 h-9 w-9"
-                              title="Déverrouiller le compte"
-                            >
-                              <Unlock className="w-4 h-4" />
-                            </Button>
-                          )}
-                          
-                          {/* Edit */}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => openEditModal(u)} 
-                            className="rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-50 h-9 w-9"
-                            title="Modifier"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
+                              {/* Unlock if locked */}
+                              {(u.isCurrentlyLocked === true || u.accountNonLocked === false) && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleUnlockUser(u.id)} 
+                                  className="text-purple-600 rounded-lg hover:text-purple-700 hover:bg-purple-50 h-9 w-9"
+                                  title="Déverrouiller le compte"
+                                >
+                                  <Unlock className="w-4 h-4" />
+                                </Button>
+                              )}
+                              
+                              {/* Edit - only if approved */}
+                              {u.isApproved && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => openEditModal(u)} 
+                                  className="rounded-lg text-amber-600 hover:text-amber-700 hover:bg-amber-50 h-9 w-9"
+                                  title="Modifier"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </Button>
+                              )}
 
-                          {/* Delete */}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => openDeleteDialog(u)} 
-                            className="text-red-600 rounded-lg hover:text-red-700 hover:bg-red-50 h-9 w-9"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                              {/* Delete - always visible for non-deleted users */}
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => openDeleteDialog(u)} 
+                                className="text-red-600 rounded-lg hover:text-red-700 hover:bg-red-50 h-9 w-9"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
