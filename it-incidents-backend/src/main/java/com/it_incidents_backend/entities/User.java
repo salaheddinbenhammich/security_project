@@ -118,7 +118,10 @@ public class User implements UserDetails {
     private void onCreate() {
         this.enabled = true;
         this.accountNonLocked = true;
-        this.isApproved = false;
+        // this.isApproved = false;
+        if (this.isApproved == null) {
+            this.isApproved = false;  // Only set default if not already set
+        }
         this.createdAt = LocalDateTime.now();
         this.passwordChangedAt = LocalDateTime.now();
         this.lastLogin = LocalDateTime.now();

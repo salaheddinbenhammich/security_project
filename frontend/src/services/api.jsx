@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getToken, getRefreshToken, clearSession, login, isTokenExpired, updateActivity } from '../utils/auth';
 import { showSuspensionCountdown } from '../utils/suspensionHandler';
+import { toast } from 'sonner'; // ✅ ADD THIS IMPORT
 
 // Runtime configuration from env-config.js (injected by Docker)
 // Falls back to localhost if not running in Docker
@@ -129,11 +130,20 @@ api.interceptors.response.use(
         if (error.response?.status === 403 && error.response?.data?.error) {
             const errorCode = error.response.data.error;
             
+            // ✅ FIX: Let pending approval errors pass through silently
+            // The component will handle showing the warning message
+            if (errorCode === 'ACCOUNT_NOT_APPROVED') {
+                console.log("⏳ Account pending approval - passing error to component");
+                // Don't show toast - let the component handle it
+                // Just pass the error through
+                return Promise.reject(error);
+            }
+            
+            // These errors trigger countdown and forced logout
             const suspensionErrors = [
                 'ACCOUNT_DISABLED',
                 'ACCOUNT_DELETED',
                 'ACCOUNT_LOCKED',
-                'ACCOUNT_NOT_APPROVED',
                 'ACCOUNT_NOT_FOUND'
             ];
             

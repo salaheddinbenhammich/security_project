@@ -23,25 +23,42 @@ import {
     Zap
 } from "lucide-react";
 import { toast } from "sonner";
+import { getUser } from "@/utils/auth"; // ✅ Import getUser from localStorage
 
 
 export default function CreateTicket() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [loadingApprovalStatus, setLoadingApprovalStatus] = useState(true);
+  const [isUserApproved, setIsUserApproved] = useState(true); // ✅ Default to approved
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const res = await api.get('/users/me');
-      setCurrentUser(res.data);
+    const checkApprovalStatus = async () => {
+      try {
+        // ✅ Try to fetch user details - this will succeed if approved
+        await api.get('/users/me');
+        setIsUserApproved(true); // User is approved
+      } catch (err) {
+        // ✅ If 403 with ACCOUNT_NOT_APPROVED, user is not approved
+        if (err.response?.status === 403 && 
+            err.response?.data?.error === 'ACCOUNT_NOT_APPROVED') {
+          setIsUserApproved(false);
+        } else {
+          // Other errors - assume approved (let other parts of app handle it)
+          setIsUserApproved(true);
+        }
+      } finally {
+        setLoadingApprovalStatus(false);
+      }
     };
-    fetchCurrentUser();
+    
+    checkApprovalStatus();
   }, []);
 
   
   // Gestion de l'ouverture des menus déroulants
-  const [openDropdown, setOpenDropdown] = useState(null); // 'PRIORITY' ou 'CATEGORY'
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -68,7 +85,6 @@ export default function CreateTicket() {
     OTHER:    { label: "Autre",         icon: Tag }
   };
 
-  // Récupération du style actuel pour l'affichage du bouton
   const currentPriorityStyle = priorityOptions[formData.priority] || priorityOptions.MEDIUM;
   const PriorityIcon = currentPriorityStyle.icon;
 
@@ -86,16 +102,37 @@ export default function CreateTicket() {
       toast.success("Ticket créé avec succès !");
       navigate("/user");
     } catch (err) {
-      setError("Impossible de créer le ticket. Veuillez réessayer.");
-      toast.error("Erreur lors de la création du ticket");
+      // ✅ Check if it's an approval error
+      if (err.response?.status === 403 && err.response?.data?.error === 'ACCOUNT_NOT_APPROVED') {
+        setError("Votre compte doit être approuvé par un administrateur avant de créer des tickets.");
+      } else {
+        setError("Impossible de créer le ticket. Veuillez réessayer.");
+        toast.error("Erreur lors de la création du ticket");
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Show loading while checking approval status
+  if (loadingApprovalStatus) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Card className="border-slate-200 shadow-xl">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-4 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-        {currentUser && !currentUser.isApproved && (
+        {/* ✅ Show banner if user is NOT approved */}
+        {!isUserApproved && (
           <div className="p-4 mb-6 bg-amber-50 border border-amber-200 rounded-xl">
             <div className="flex items-start gap-3">
               <Clock className="w-5 h-5 text-amber-600 mt-0.5" />
@@ -103,6 +140,7 @@ export default function CreateTicket() {
                 <p className="font-semibold text-amber-900">Compte en attente d'approbation</p>
                 <p className="text-sm text-amber-700 mt-1">
                   Votre compte doit être approuvé par un administrateur avant de pouvoir créer des tickets.
+                  Vous recevrez une notification une fois votre compte approuvé.
                 </p>
               </div>
             </div>
@@ -138,7 +176,8 @@ export default function CreateTicket() {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Ex: Écran noir au démarrage de l'ordinateur..."
                   required
-                  className="h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  disabled={!isUserApproved}
+                  className="h-11 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
 
@@ -154,7 +193,8 @@ export default function CreateTicket() {
                   placeholder="Expliquez le problème rencontré, les messages d'erreur affichés, les étapes pour reproduire le problème..."
                   rows={6}
                   required
-                  className="resize-none border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  disabled={!isUserApproved}
+                  className="resize-none border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
 
@@ -166,8 +206,9 @@ export default function CreateTicket() {
                   
                   <button
                     type="button"
-                    onClick={() => setOpenDropdown(openDropdown === 'PRIORITY' ? null : 'PRIORITY')}
-                    className={`flex w-full h-11 items-center justify-between rounded-lg border px-3.5 text-sm font-medium transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 ${currentPriorityStyle.color} border`}
+                    onClick={() => isUserApproved && setOpenDropdown(openDropdown === 'PRIORITY' ? null : 'PRIORITY')}
+                    disabled={!isUserApproved}
+                    className={`flex w-full h-11 items-center justify-between rounded-lg border px-3.5 text-sm font-medium transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 ${currentPriorityStyle.color} border disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
                   >
                     <div className="flex items-center gap-2">
                       <PriorityIcon className="h-4 w-4" />
@@ -176,7 +217,7 @@ export default function CreateTicket() {
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </button>
 
-                  {openDropdown === 'PRIORITY' && (
+                  {openDropdown === 'PRIORITY' && isUserApproved && (
                     <div className="absolute top-full mt-1 w-full z-20 rounded-lg border border-slate-200 bg-white shadow-xl py-1 animate-in fade-in zoom-in-95 duration-100">
                       {Object.entries(priorityOptions).map(([key, style]) => {
                         const Icon = style.icon;
@@ -207,8 +248,9 @@ export default function CreateTicket() {
                   
                   <button
                     type="button"
-                    onClick={() => setOpenDropdown(openDropdown === 'CATEGORY' ? null : 'CATEGORY')}
-                    className="flex w-full h-11 items-center justify-between rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-slate-700"
+                    onClick={() => isUserApproved && setOpenDropdown(openDropdown === 'CATEGORY' ? null : 'CATEGORY')}
+                    disabled={!isUserApproved}
+                    className="flex w-full h-11 items-center justify-between rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-slate-700 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100"
                   >
                     <div className="flex items-center gap-2">
                       <CategoryIcon className="h-4 w-4 text-indigo-600" />
@@ -217,7 +259,7 @@ export default function CreateTicket() {
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </button>
 
-                  {openDropdown === 'CATEGORY' && (
+                  {openDropdown === 'CATEGORY' && isUserApproved && (
                     <div className="absolute top-full mt-1 w-full z-20 rounded-lg border border-slate-200 bg-white shadow-xl py-1 animate-in fade-in zoom-in-95 duration-100 max-h-[280px] overflow-y-auto">
                       {Object.entries(categoryOptions).map(([key, style]) => {
                         const Icon = style.icon;
@@ -263,8 +305,8 @@ export default function CreateTicket() {
               <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
                 <Button
                   type="submit"
-                  disabled={loading || (currentUser && !currentUser.isApproved)}
-                  className="min-w-[200px] font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/30 h-11"
+                  disabled={loading || !isUserApproved}
+                  className="min-w-[200px] font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/30 h-11 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">
