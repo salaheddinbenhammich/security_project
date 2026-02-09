@@ -55,7 +55,6 @@ A full-stack web application for managing IT support tickets with role-based acc
 ### Prerequisites
 
 - **Docker** and **Docker Compose** installed
-- **8GB RAM** minimum
 - Ports **80**, **8080**, and **5432** available
 
 ---
