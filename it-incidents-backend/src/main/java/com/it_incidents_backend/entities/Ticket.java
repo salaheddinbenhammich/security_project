@@ -143,4 +143,10 @@ public class Ticket {
         this.resolvedAt = null;
         this.resolution = null;
     }
+
+    public void cancel() {
+        this.closedAt = LocalDateTime.now();
+        this.status = TicketStatus.CANCELLED;
+        this.resolution = null; // Canceled tickets don't have resolutions
+    }
 }
