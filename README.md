@@ -55,6 +55,7 @@ A full-stack web application for managing IT support tickets with role-based acc
 ### Prerequisites
 
 - **Docker** and **Docker Compose** installed
+- **8GB RAM** minimum
 - Ports **80**, **8080**, and **5432** available
 
 ---
@@ -189,6 +190,8 @@ sudo systemctl enable docker
 
 ### Deploy with Pre-built Images
 
+This is the fastest way to deploy - uses pre-built images from GitHub Container Registry.
+
 #### Step 1: Clone the Repository
 
 ```bash
@@ -267,7 +270,79 @@ it-incidents-frontend   ghcr.io/salaheddinbenhammich/it-incidents-frontend:lates
 
 ---
 
+### Build Images Locally (Alternative)
+
+If you want to build the Docker images yourself instead of using pre-built ones:
+
+#### Step 1: Clone the Repository
+
+```bash
+# Clone the project
+git clone https://github.com/salaheddinbenhammich/security_project.git
+
+# Navigate to project directory
+cd security_project
+```
+
+#### Step 2: Build and Start All Services
+
+```bash
+# Build images and start containers
+docker compose up --build -d
+```
+
+This will:
+1. Build the backend image from `it-incidents-backend/Dockerfile`
+2. Build the frontend image from `frontend/Dockerfile`
+3. Pull PostgreSQL image
+4. Start all services
+
+**First build takes 5-10 minutes** (downloads Maven/npm dependencies)
+
+#### Step 3: View Build Logs (Optional)
+
+```bash
+# Follow logs during build and startup
+docker compose logs -f
+
+# Press Ctrl+C to stop following logs (containers keep running)
+```
+
+#### Step 4: Verify Deployment
+
+```bash
+# Check if all containers are running
+docker compose ps
+```
+
+Expected output:
+```
+NAME                    IMAGE                           STATUS
+it-incidents-backend    security_project-backend        Up (healthy)
+it-incidents-db         postgres:16-alpine              Up (healthy)
+it-incidents-frontend   security_project-frontend       Up
+```
+
+#### Step 5: Access the Application
+
+- **Frontend**: http://localhost
+- **Backend API**: http://localhost:8080
+- **Swagger API Docs**: http://localhost:8080/swagger-ui.html
+
+---
+
+### Choosing Between Pre-built vs Local Build
+
+| Method | Pros | Cons | Use When |
+|--------|------|------|----------|
+| **Pre-built Images** | ✅ Fast (90 seconds)<br>✅ No build tools needed<br>✅ Consistent images | ❌ Requires internet<br>❌ Can't modify code | Quick deployment<br>Testing<br>Production |
+| **Local Build** | ✅ Can modify code<br>✅ No external dependencies<br>✅ Full control | ❌ Slow first build (5-10 min)<br>❌ Requires Maven/Node | Development<br>Customization<br>Offline environments |
+
+---
+
 ### Managing the Application
+
+**For pre-built images (docker-compose.prod.yml):**
 
 ```bash
 # Stop all services
@@ -290,6 +365,28 @@ docker compose -f docker-compose.prod.yml logs -f postgres
 # Update to latest images
 docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d
+```
+
+**For locally built images (docker-compose.yml):**
+
+```bash
+# Stop all services
+docker compose down
+
+# Stop and remove all data (including database)
+docker compose down -v
+
+# Rebuild and restart (after code changes)
+docker compose up --build -d
+
+# Restart services
+docker compose restart
+
+# View logs
+docker compose logs -f
+
+# Rebuild only specific service
+docker compose up --build -d backend  # or frontend
 ```
 
 ---
@@ -461,9 +558,12 @@ Once the backend is running, access interactive API documentation:
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **OpenAPI JSON**: http://localhost:8080/api-docs
 
+
 ---
 
 ## 🐛 Troubleshooting
+
+> **Note**: Replace `docker compose -f docker-compose.prod.yml` with `docker compose` if you built images locally.
 
 ### Port Already in Use
 
@@ -474,7 +574,7 @@ sudo lsof -i :80
 # Kill the process
 sudo kill -9 <PID>
 
-# Or change port in docker-compose.prod.yml
+# Or change port in docker-compose.yml or docker-compose.prod.yml
 # frontend:
 #   ports:
 #     - "3000:80"  # Use port 3000 instead
@@ -483,8 +583,11 @@ sudo kill -9 <PID>
 ### Backend Won't Start
 
 ```bash
-# View backend logs
+# View backend logs (pre-built images)
 docker compose -f docker-compose.prod.yml logs backend
+
+# Or for local build
+docker compose logs backend
 
 # Check database connection
 docker compose -f docker-compose.prod.yml exec postgres pg_isready -U postgres
@@ -522,6 +625,18 @@ docker compose -f docker-compose.prod.yml down -v
 docker compose -f docker-compose.prod.yml up -d
 ```
 
+### Build Failures (Local Build Only)
+
+```bash
+# Clear Docker cache and rebuild
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+
+# View build logs
+docker compose build
+```
+
 ### Permission Denied (Docker)
 
 ```bash
@@ -535,7 +650,11 @@ newgrp docker
 ### View All Container Logs
 
 ```bash
+# Pre-built images
 docker compose -f docker-compose.prod.yml logs -f --tail=100
+
+# Local build
+docker compose logs -f --tail=100
 ```
 
 ---
@@ -568,6 +687,5 @@ docker compose -f docker-compose.prod.yml logs -f --tail=100
 This project is licensed under the MIT License.
 
 ---
-
 
 **Happy Deploying! 🚀**
