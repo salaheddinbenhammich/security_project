@@ -2,7 +2,9 @@ import axios from 'axios';
 import { getToken, getRefreshToken, clearSession, login, isTokenExpired, updateActivity } from '../utils/auth';
 import { showSuspensionCountdown } from '../utils/suspensionHandler';
 
-const API_URL = 'http://localhost:8080/api';
+// Runtime configuration from env-config.js (injected by Docker)
+// Falls back to localhost if not running in Docker
+const API_URL = window.ENV?.API_URL || 'http://localhost:8080/api';
 
 const api = axios.create({
     baseURL: API_URL,
