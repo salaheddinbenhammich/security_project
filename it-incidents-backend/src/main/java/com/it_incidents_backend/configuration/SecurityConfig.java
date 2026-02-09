@@ -95,6 +95,9 @@ public class SecurityConfig {
                         
                         // Health check - PUBLIC
                         .requestMatchers("/api/health").permitAll()
+
+                        // Actuator endpoints - PUBLIC (for Docker healthcheck)
+                        .requestMatchers("/actuator/**").permitAll()
                         
                         // Read-only ticket list - PUBLIC (guest users can view)
                         .requestMatchers(HttpMethod.GET, "/api/tickets").permitAll()
