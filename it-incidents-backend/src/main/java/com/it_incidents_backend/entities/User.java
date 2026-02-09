@@ -110,6 +110,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Ticket> createdTickets;
 
+    @Column(name = "first_failed_login_attempt")
+    private LocalDateTime firstFailedLoginAttempt;
+
 //    @OneToMany(mappedBy = "assignedTo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 //    @Builder.Default
 //    private Set<Ticket> assignedTickets = new HashSet<>();
@@ -203,14 +206,27 @@ public class User implements UserDetails {
     public void resetFailedLoginAttempts() {
         this.failedLoginAttempts = 0;
         this.lockedUntil = null;
+        this.firstFailedLoginAttempt = null;
     }
 
     // Helper method to increment failed login attempts
     public void incrementFailedLoginAttempts() {
-        this.failedLoginAttempts++;
-        // Lock account for 15 minutes after 5 failed attempts
+        LocalDateTime now = LocalDateTime.now();
+        
+        // BRUTE FORCE PROTECTION: 5 attempts in 5-minute window
+        if (this.firstFailedLoginAttempt == null || 
+            now.isAfter(this.firstFailedLoginAttempt.plusMinutes(5))) {
+            // Start new window
+            this.firstFailedLoginAttempt = now;
+            this.failedLoginAttempts = 1;
+        } else {
+            // Within 5-minute window - increment
+            this.failedLoginAttempts++;
+        }
+        
+        // Lock account for 30 minutes after 5 failed attempts in 5 minutes
         if (this.failedLoginAttempts >= 5) {
-            this.lockedUntil = LocalDateTime.now().plusMinutes(15);
+            this.lockedUntil = now.plusMinutes(30);
         }
     }
 }

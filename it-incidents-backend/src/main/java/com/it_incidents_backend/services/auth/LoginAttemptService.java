@@ -13,8 +13,8 @@ public class LoginAttemptService {
 
     private final UserRepository userRepository;
 
-    public static final int MAX_FAILED_ATTEMPTS = 5;
-    public static final int LOCKOUT_DURATION_MINUTES = 15;
+    // public static final int MAX_FAILED_ATTEMPTS = 5;
+    // public static final int LOCKOUT_DURATION_MINUTES = 15;
 
     public LoginAttemptService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -34,9 +34,9 @@ public class LoginAttemptService {
     public void recordFailedLogin(User user) {
         user.incrementFailedLoginAttempts();
 
-        if (user.getFailedLoginAttempts() >= MAX_FAILED_ATTEMPTS) {
-            user.setLockedUntil(LocalDateTime.now().plusMinutes(LOCKOUT_DURATION_MINUTES));
-        }
+        // if (user.getFailedLoginAttempts() >= MAX_FAILED_ATTEMPTS) {
+        //     user.setLockedUntil(LocalDateTime.now().plusMinutes(LOCKOUT_DURATION_MINUTES));
+        // }
 
         userRepository.save(user);
     }
