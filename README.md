@@ -30,7 +30,7 @@ A full-stack web application for managing IT support tickets with role-based acc
 - 💬 **Comments System** with internal notes for admins
 - 🔒 **Advanced Security Features**:
   - Password expiration (90 days)
-  - Account lockout after failed attempts
+  - Account lockout after 5 failed attempts in 5min
   - Password strength requirements
 - 📊 **Admin Dashboard** with statistics and user management
 - 🔍 **Search & Filter** tickets by status, priority, category
