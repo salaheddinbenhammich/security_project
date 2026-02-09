@@ -3,9 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import { jwtDecode } from "jwt-decode";
 
 import PublicIncidents from "./pages/PublicIncidents";
-import Login from "./pages/auth/Login";
+import Login from "./pages/auth/login";
 import Register from "./pages/auth/Register";
-import ChangeExpiredPassword from "./pages/auth/ChangeExpiredPassword";
+import ChangeExpiredPassword from "./pages/auth/Changeexpiredpassword";
 import MainLayout from "./layouts/MainLayout";
 import UserDashboard from "./pages/User/UserDashboard";
 import UserTicketDetails from "./pages/User/UserTicketDetails";
@@ -16,7 +16,7 @@ import AdminHistory from "./pages/admin/AdminHistory";
 import UserProfile from "./pages/common/UserProfile";
 import CreateTicket from "./pages/User/CreateTicket";
 import UserTickets from "./pages/User/UserTickets";
-import UserDetails from "./pages/admin/UserDetails";
+import UserDetails from "./pages/admin/Userdetails";
 
 import { getToken, isAuthenticated, isSessionInactive, clearSession, updateActivity } from "@/utils/auth";
 import { Toaster } from "sonner";
