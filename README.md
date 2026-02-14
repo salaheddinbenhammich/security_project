@@ -1,4 +1,4 @@
-# 🎫 IT Incidents Management System
+# IT Incidents Management System
 
 A full-stack web application for managing IT support tickets with role-based access control, built with **Spring Boot**, **React**, and **PostgreSQL**.
 
