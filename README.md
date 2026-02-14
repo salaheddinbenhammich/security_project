@@ -2,8 +2,7 @@
 
 A full-stack web application for managing IT support tickets with role-based access control, built with **Spring Boot**, **React**, and **PostgreSQL**.
 
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://github.com/salaheddinbenhammich/security_project/pkgs/container/it-incidents-backend)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+Developped By IL of Lorraine University (2025/2026).
 
 ---
 
@@ -424,7 +423,7 @@ The application comes pre-seeded with demo users for testing:
 
 ---
 
-## 🔧 Manual Deployment (Optional)
+## Manual Deployment (Optional)
 
 <details>
 <summary><b>Click to expand manual deployment instructions</b></summary>
@@ -550,7 +549,7 @@ Login with: `admin` / `Admin@2024Secure!`
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
 Once the backend is running, access interactive API documentation:
 
@@ -560,7 +559,7 @@ Once the backend is running, access interactive API documentation:
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 > **Note**: Replace `docker compose -f docker-compose.prod.yml` with `docker compose` if you built images locally.
 
@@ -658,33 +657,4 @@ docker compose logs -f --tail=100
 
 ---
 
-## 🔒 Security Notes
-
-⚠️ **For Production Deployment**:
-
-1. Change `JWT_SECRET` to a strong random value:
-   ```bash
-   openssl rand -base64 64
-   ```
-
-2. Use strong database passwords
-
-3. Enable HTTPS/SSL
-
-4. Configure firewall rules
-
-5. Use environment-specific configuration files
-
-6. Enable rate limiting
-
-7. Regular security audits
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
----
-
-**Happy Deploying! 🚀**
+**Happy Deploying!**
